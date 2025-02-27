@@ -5,6 +5,10 @@ We tried to expand on the base game by adding some new mechanics that we though 
 
 We introduced an obstacle that slows down the player for 3 seconds upon collision. This adds a new layer of challenge by forcing the player to maneuver carefully. The player would change colour indicating the freeze effect is active.
 
+https://github.com/user-attachments/assets/0d0aaca6-c610-4fd1-96dc-160ed051fb95
+
+
+
 ## Moving Collectibles
 dynamic, we added moving obstacles and collectibles. We got the idea from the Enemy object, so we used Unity’s NavMesh for pathfinding and ensured that collectible items are zooming through the playable space in random directions.
 To make the environment feel more 
@@ -18,7 +22,7 @@ Rolling is fun and all, but jump
 
 ing adds more control and fun to the game, most importantly it adds more chaos We modified the player’s movement script to allow jumping using the space bar.
 
-To implement this, we started by introducint two variables. `isGrounded` which would tell us if the player is on the ground and `jumpForce` to control how powerful the jump is
+To implement this, we started by introducing two variables. `isGrounded` which would tell us if the player is on the ground and `jumpForce` to control how powerful the jump is
 
 `private bool isGrounded`
 
@@ -47,3 +51,5 @@ We used addForce on the rigid body of the player to apply sudden upward force in
 
 
 ## Fast and Faster
+https://github.com/user-attachments/assets/d8251bb1-4797-406e-b98d-6852b0001198
+
