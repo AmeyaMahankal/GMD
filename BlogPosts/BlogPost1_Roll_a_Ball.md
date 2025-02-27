@@ -6,7 +6,10 @@ We tried to expand on the base game by adding some new mechanics that we though 
 We introduced an obstacle that slows down the player for 3 seconds upon collision. This adds a new layer of challenge by forcing the player to maneuver carefully. The player would change colour indicating the freeze effect is active.
 
 ## Moving Collectibles
-To make the environment feel more dynamic, we added moving obstacles and collectibles. We got the idea from the Enemy object, so we used Unity’s NavMesh for pathfinding and ensured that collectible items are zooming through the playable space in random directions.
+dynamic, we added moving obstacles and collectibles. We got the idea from the Enemy object, so we used Unity’s NavMesh for pathfinding and ensured that collectible items are zooming through the playable space in random directions.
+To make the environment feel more 
+
+![Untitled design (2)](https://github.com/user-attachments/assets/d54b7810-83c2-4a76-ad83-3f1b44cbc56c)
 
 ## Jumping
 Rolling is fun and all, but jump
