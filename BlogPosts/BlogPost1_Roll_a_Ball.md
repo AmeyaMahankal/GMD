@@ -2,16 +2,82 @@
 We tried to expand on the base game by adding some new mechanics that we though would be fun: **a freeze obstacle**, **moving collectibles**, **jumping**, and **better dying system**. These mechanics make the game at the very least more dynamic. Here’s how we did it!
 
 ## Freeze Obstacle
+To make the game more challenging, we introduced an obstacle that slows down upon collision. This adds a new layer of difficulty, requiring players to carefully maneuver around. To provide feedback to the player, we also changed the player’s color to indicate that the freeze effect is active.
 
-We introduced an obstacle that slows down the player for 3 seconds upon collision. This adds a new layer of challenge by forcing the player to maneuver carefully. The player would change colour indicating the freeze effect is active.
+We did this by creating a new prefab 'FreezeObstacle' and tagging it with "Freeze"
+
+```
+ private void OnTriggerEnter(Collider other)
+ {
+
+     if (other.gameObject.CompareTag("PickUp"))
+     {
+         other.gameObject.SetActive(false);
+         count++;
+         speed += speedIncrementer;
+         updateCountText();
+     }
+     else if (other.gameObject.CompareTag("Freeze")) 
+     {
+         StartCoroutine(TemporarilyImmobilize(1.5f));
+     }
+ }
+```
+
+When a collision is detected we execute a coroutine that slows the player down.
+
+```
+private IEnumerator TemporarilyImmobilize(float duration)
+{
+    isImmobilized = true;
+    GetComponent<Renderer>().material = immobilizedMaterial;
+    yield return new WaitForSeconds(duration);
+    GetComponent<Renderer>().material = normalMaterial;
+    isImmobilized = false;
+}
+```
+
 
 https://github.com/user-attachments/assets/0d0aaca6-c610-4fd1-96dc-160ed051fb95
 
 
-
 ## Moving Collectibles
 To make the environment feel more dynamic and chaotic, we added moving obstacles and collectibles. We got the idea from the Enemy object, so we used Unity’s NavMesh for pathfinding and ensured that collectible items are zooming through the playable space in random directions.
-To make the environment feel more 
+
+
+
+The collectibles continuously select random locations within a specified radius and move toward them. Once they reach their destination, they pick a new random point and move again, ensuring unpredictable movement.
+
+
+```
+    Vector3 GetRandomPoint(Vector3 center, float radius)
+    {
+        Vector3 randomDirection = Random.insideUnitSphere * radius;
+        randomDirection += center;
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(randomDirection, out hit, radius, NavMesh.AllAreas))
+        {
+            return hit.position;
+        }
+        return center;
+    }
+```
+
+```
+  void Update()
+  {
+      if (!agent.pathPending && agent.remainingDistance < 0.5f)
+      {
+          MoveToRandomLocation();
+      }
+  }
+
+  void MoveToRandomLocation()
+  {
+      Vector3 randomPoint = GetRandomPoint(transform.position, moveRadius);
+      agent.SetDestination(randomPoint);
+  }
+```
 
 ![Untitled design (2)](https://github.com/user-attachments/assets/d54b7810-83c2-4a76-ad83-3f1b44cbc56c)
 
@@ -47,5 +113,32 @@ We used addForce on the rigid body of the player to apply sudden upward force in
 
 
 ## Fast and Faster
+
+Another way to introduce more chaos is to add acceleration. This would make the game progressively harder as the player collects more items and gains speed.
+
+We achieved this by adding a speedIncrementer
+```public float speedIncrementer = 2;```
+
+Which we use when we detect a collision with the collectibles. We also update the UI, but that code is not that interesting ;)
+```
+ private void OnTriggerEnter(Collider other)
+ {
+
+     if (other.gameObject.CompareTag("PickUp"))
+     {
+         other.gameObject.SetActive(false);
+         count++;
+         speed += speedIncrementer;
+         updateCountText();
+     }
+     else if (other.gameObject.CompareTag("Freeze")) 
+     {
+         StartCoroutine(TemporarilyImmobilize(1.5f));
+     }
+ }
+```
+
+
+
 https://github.com/user-attachments/assets/d8251bb1-4797-406e-b98d-6852b0001198
 
