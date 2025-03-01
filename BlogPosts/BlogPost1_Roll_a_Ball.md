@@ -138,6 +138,31 @@ Which we use when we detect a collision with the collectibles. We also update th
  }
 ```
 
+Thanks to all the chaos introduced by us the player can now die also by falling of the map. To do that we compare a custom set `fallThreshould` with the `transform.position.y` of the player and we decide the player should be killed. 
+
+
+
+
+```
+public float fallThreshold = -10.0f;
+
+
+ private void FixedUpdate()
+ {
+     if (!isImmobilized) 
+     {
+         Vector3 movement = new Vector3(movementX, 0.0f, movementY);
+         rb.AddForce(movement * speed);
+     }
+     isGrounded = Physics.Raycast(transform.position, Vector3.down, 0.5f);
+
+
+     if (transform.position.y < fallThreshold)
+     {
+         Die();
+     }
+ }
+```
 
 
 https://github.com/user-attachments/assets/d8251bb1-4797-406e-b98d-6852b0001198
