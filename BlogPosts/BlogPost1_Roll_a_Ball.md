@@ -1,5 +1,7 @@
 # Improving the Roll-a-Ball Unity Game Tutorial
-We tried to expand on the base game by adding some new mechanics that we though would be fun: **a freeze obstacle**, **moving collectibles**, **jumping**, and **better dying system**. These mechanics make the game at the very least more dynamic. Here’s how we did it!
+We tried to expand on the base game by adding some new mechanics that we though would be fun: **a freeze obstacle**, **moving collectibles**, **jumping**, and **better dying system**. These mechanics make the game at the very least more dynamic.
+
+Link to repository: https://github.com/radoslavKiryazov/Roll-a-Ball
 
 ## Freeze Obstacle
 To make the game more challenging, we introduced an obstacle that slows down upon collision. This adds a new layer of difficulty, requiring players to carefully maneuver around. To provide feedback to the player, we also changed the player’s color to indicate that the freeze effect is active.
