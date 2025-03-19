@@ -11,11 +11,13 @@ public class Player : MonoBehaviour
     private Rigidbody rb;
     private float movementX;
     private float movementY;
+    private bool isCrouched = false;
 
 
 
-    private float speed = 5;
-    public TextMeshPro text;
+    [SerializeField] private float speed = 5;
+    [SerializeField] public TextMeshProUGUI  inputIndicator;
+    [SerializeField] public TextMeshProUGUI  crouchedIndicator;
 
     private void Start()
     {
@@ -27,7 +29,7 @@ public class Player : MonoBehaviour
         Vector3 movement = new Vector3(movementX, 0.0f, movementY);
 
         if (movement.sqrMagnitude > 0.01f) {
-        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.15f);
+         transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.15f);
         }
 
         transform.Translate(movement * speed * Time.deltaTime, Space.World);
@@ -42,47 +44,65 @@ public class Player : MonoBehaviour
 
     public void OnA()
     {
-        //text.text = "A";
+        UpdateInputIndicator("A");
         Debug.Log("A");
     }
 
     public void OnB()
     {
-        //text.text = "B";
+        UpdateInputIndicator("B");
         Debug.Log("B");
 
     }
 
     public void OnX()
     {
-        //text.text = "X";
+        isCrouched = !isCrouched;
+        UpdateInputIndicator("X");
+        UpdateCrouchIndicator();
         Debug.Log("X");
-
     }
 
     public void OnY()
     {
-        //text.text = "Y";
+        UpdateInputIndicator("Y");
         Debug.Log("Y");
 
     }
 
     public void OnLeftTrigger()
     {
-        //text.text = "L Trigger";
+        UpdateInputIndicator("L Trigger");
         Debug.Log("L Trigger");
 
     }
 
     public void OnRightTrigger()
     {
-        //text.text = "R Trigger";
+        UpdateInputIndicator("R Trigger");
         Debug.Log("R Trigger");
     }
 
     public void OnStart()
     {
-        //text.text = "Start";
+        UpdateInputIndicator("Start");
         Debug.Log("Start");
+    }
+
+
+
+    private void UpdateCrouchIndicator() {
+        if(isCrouched) {
+            crouchedIndicator.text = "Crouched";
+            crouchedIndicator.color = Color.red;
+        } else {
+            crouchedIndicator.text = "Not Crouched.";
+            crouchedIndicator.color = Color.green;
+        }
+    }
+
+    private void UpdateInputIndicator(string input)
+    {
+        inputIndicator.text = input;
     }
 }
