@@ -11,13 +11,18 @@ public class Player : MonoBehaviour
     private float movementX;
     private float movementY;
     private bool isCrouched = false;
-
-
-
+    private Animator animator;
+    
+    public static readonly float animeSpeed = Animator.StringToHash("speed");
+    
+    
     [SerializeField] private float speed = 5;
     [SerializeField] public TextMeshProUGUI  inputIndicator;
     [SerializeField] public TextMeshProUGUI  crouchedIndicator;
 
+    private void Awake() {
+        animator = GetComponent<Animator>(); 
+    }
     private void Start()
     {
     }
@@ -25,6 +30,8 @@ public class Player : MonoBehaviour
     private void Update()
     {
         Vector3 movement = new Vector3(movementX, 0.0f, movementY);
+        animator.SetFloat("speed", movement.magnitude);
+        
 
         if (movement.sqrMagnitude > 0.01f) {
          transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.15f);
@@ -38,6 +45,7 @@ public class Player : MonoBehaviour
         Vector2 movementVector = value.Get<Vector2>();
         movementX = movementVector.x;
         movementY = movementVector.y;
+
     }
 
     public void OnA()
