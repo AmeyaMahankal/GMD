@@ -8,7 +8,6 @@ using UnityEngine.InputSystem;
 public class Player : MonoBehaviour
 {
     private Vector2 movement;
-    private Rigidbody rb;
     private float movementX;
     private float movementY;
     private bool isCrouched = false;
@@ -21,10 +20,9 @@ public class Player : MonoBehaviour
 
     private void Start()
     {
-        rb = GetComponent<Rigidbody>();
     }
 
-    private void FixedUpdate()
+    private void Update()
     {
         Vector3 movement = new Vector3(movementX, 0.0f, movementY);
 
@@ -32,7 +30,7 @@ public class Player : MonoBehaviour
          transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.15f);
         }
 
-        transform.Translate(movement * speed * Time.deltaTime, Space.World);
+        transform.Translate(movement  * Time.deltaTime * speed, Space.World);
     }
 
     public void OnMovement(InputValue value)
