@@ -47,8 +47,14 @@ public class StealthKill : MonoBehaviour
     void PerformStealthKill(GameObject enemy)
     {
         Debug.Log("Stealth Kill Executed!");
+        Animator enemyAnimator = enemy.GetComponentInChildren<Animator>();
+        if (enemyAnimator)
+        {
+            enemyAnimator.SetTrigger("Die");
 
-        Destroy(enemy, 1f);
+        }
+
+        Destroy(enemy, 4f);
 
     }
 
