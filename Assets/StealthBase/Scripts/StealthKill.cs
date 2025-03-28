@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class StealthKill : MonoBehaviour
 {
-    public float killDistance = 2f;  
+    public float killDistance = 2f;
     public float killAngle = 45f;
     public KeyCode killKey = KeyCode.E;
 
@@ -16,22 +16,31 @@ public class StealthKill : MonoBehaviour
 
     void TryStealthKill()
     {
-        // Find the nearest enemy
-        GameObject enemy = GameObject.FindWithTag("Enemy");
-        if (enemy == null) return;
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        GameObject closestEnemy = null;
+        float closestDistance = Mathf.Infinity;
 
-        // Check distance
-        float distance = Vector3.Distance(transform.position, enemy.transform.position);
-        if (distance > killDistance) return;
-
-        // Check if within 45-degree cone behind enemy
-        Vector3 directionToEnemy = (enemy.transform.position - transform.position).normalized;
-        float dotProduct = Vector3.Dot(enemy.transform.forward, -directionToEnemy);
-
-        float requiredDot = Mathf.Cos(killAngle * Mathf.Deg2Rad); // Convert angle to dot product range
-        if (dotProduct >= requiredDot) // Ensures within 45 degrees behind enemy
+        // Find the closest enemy within range
+        foreach (GameObject enemy in enemies)
         {
-            PerformStealthKill(enemy);
+            float distance = Vector3.Distance(transform.position, enemy.transform.position);
+            if (distance < closestDistance && distance <= killDistance)
+            {
+                closestEnemy = enemy;
+                closestDistance = distance;
+            }
+        }
+
+        if (closestEnemy == null) return; // No enemy in range
+
+        // Check if the player is behind the enemy
+        Vector3 toPlayer = (transform.position - closestEnemy.transform.position).normalized;
+        float dotProduct = Vector3.Dot(closestEnemy.transform.forward, toPlayer);
+        float requiredDot = Mathf.Cos(killAngle * Mathf.Deg2Rad);
+
+        if (dotProduct > requiredDot)  // Ensures the player is behind enemy
+        {
+            PerformStealthKill(closestEnemy);
         }
     }
 
@@ -39,7 +48,8 @@ public class StealthKill : MonoBehaviour
     {
         Debug.Log("Stealth Kill Executed!");
 
-        Destroy(enemy, 1f); 
+        Destroy(enemy, 1f);
+
     }
 
 
