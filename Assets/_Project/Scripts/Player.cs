@@ -1,13 +1,10 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using TMPro;
 
 public class Player : MonoBehaviour
 {
-    // Existing fields
     private float movementX;
     private float movementY;
     private bool isCrouched = false;
@@ -19,12 +16,20 @@ public class Player : MonoBehaviour
     
     // Jump fields
     [Header("Jump Settings")]
-    [SerializeField] private float jumpHeight = 5f;   // Adjust as needed
-    [SerializeField] private float gravity = 9.81f;  // Adjust as needed
+    [SerializeField] private float jumpHeight = 5f;   
+    [SerializeField] private float gravity = 9.81f;  
     private float verticalVelocity = 0f;
     private bool isJumping = false;
 
-    private void Awake() {
+    // ------------------------------------
+    // ATTACK FIELDS (no OverlapSphere now)
+    // ------------------------------------
+    [Header("Attack Settings")]
+    [Tooltip("If true, means we are currently in an attack animation and can deal damage on sword collision.")]
+    public bool isAttacking = false;
+
+    private void Awake() 
+    {
         animator = GetComponent<Animator>(); 
     }
 
@@ -38,11 +43,12 @@ public class Player : MonoBehaviour
     private void Update()
     {
         // --- Existing Movement ---
-        Vector3 movement = new Vector3(movementX, 0.0f, movementY);
+        Vector3 movement = new Vector3(movementX, 0f, movementY);
         animator.SetFloat("speed", movement.magnitude);
 
         // Rotate only if there's input
-        if (movement.sqrMagnitude > 0.01f) {
+        if (movement.sqrMagnitude > 0.01f) 
+        {
             transform.rotation = Quaternion.Slerp(
                 transform.rotation, 
                 Quaternion.LookRotation(movement), 
@@ -56,13 +62,9 @@ public class Player : MonoBehaviour
         // --- Jump & Gravity ---
         if (isJumping)
         {
-            // Apply gravity
             verticalVelocity -= gravity * Time.deltaTime;
-
-            // Move vertically
             transform.Translate(Vector3.up * verticalVelocity * Time.deltaTime, Space.World);
 
-            // Check ground contact (assuming y=0 is the ground)
             if (transform.position.y <= 0f)
             {
                 // Snap to ground
@@ -95,19 +97,17 @@ public class Player : MonoBehaviour
         UpdateInputIndicator("A");
         Debug.Log("A");
 
-        // Only jump if not currently in the air
         if (!isJumping)
         {
             isJumping = true;
             animator.SetTrigger("JumpTrigger");
             animator.SetBool("isGrounded", true);
 
-            // Simple "impulse" jump
-            // Or: verticalVelocity = Mathf.Sqrt(2f * jumpHeight * gravity);
-            verticalVelocity = jumpHeight;        }
+            verticalVelocity = jumpHeight;        
+        }
     }
 
-    // --- Other Buttons (unchanged) ---
+    // --- Other Buttons ---
     public void OnB()
     {
         UpdateInputIndicator("B");
@@ -128,16 +128,21 @@ public class Player : MonoBehaviour
         Debug.Log("Y");
     }
 
+    // --- Left Trigger: now does nothing (or remove if desired) ---
     public void OnLeftTrigger()
     {
         UpdateInputIndicator("L Trigger");
         Debug.Log("L Trigger");
+        // No attack code here now
     }
 
+    // --- Right Trigger: Attack ---
     public void OnRightTrigger()
     {
         UpdateInputIndicator("R Trigger");
         Debug.Log("R Trigger");
+
+        PerformAttack();
     }
 
     public void OnStart()
@@ -147,11 +152,15 @@ public class Player : MonoBehaviour
     }
 
     // --- Helper Methods ---
-    private void UpdateCrouchIndicator() {
-        if(isCrouched) {
+    private void UpdateCrouchIndicator()
+    {
+        if (isCrouched)
+        {
             crouchedIndicator.text = "Crouched";
             crouchedIndicator.color = Color.red;
-        } else {
+        }
+        else
+        {
             crouchedIndicator.text = "Not Crouched.";
             crouchedIndicator.color = Color.green;
         }
@@ -160,5 +169,24 @@ public class Player : MonoBehaviour
     private void UpdateInputIndicator(string input)
     {
         inputIndicator.text = input;
+    }
+
+    // ---------------------------------
+    // ATTACK HELPER (NO OverlapSphere)
+    // ---------------------------------
+    private void PerformAttack()
+    {
+        // Trigger the attack animation
+        animator.SetTrigger("attack");
+
+        // Mark that we are currently in an attack
+        isAttacking = true;
+    }
+
+    // Called via Animation Event near the end of the clip
+    public void EndAttack()
+    {
+        isAttacking = false;
+        Debug.Log("Attack ended - no longer dealing damage on collision.");
     }
 }
