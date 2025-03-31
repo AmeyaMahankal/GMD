@@ -13,53 +13,58 @@ public class Player : MonoBehaviour
     [SerializeField] private float speed = 5;
     [SerializeField] public TextMeshProUGUI inputIndicator;
     [SerializeField] public TextMeshProUGUI crouchedIndicator;
-    
+
     // Jump fields
     [Header("Jump Settings")]
-    [SerializeField] private float jumpHeight = 5f;   
-    [SerializeField] private float gravity = 9.81f;  
+    [SerializeField] private float jumpHeight = 5f;
+    [SerializeField] private float gravity = 9.81f;
     private float verticalVelocity = 0f;
     private bool isJumping = false;
 
-    // ------------------------------------
-    // ATTACK FIELDS (no OverlapSphere now)
-    // ------------------------------------
+    // ATTACK
     [Header("Attack Settings")]
-    [Tooltip("If true, means we are currently in an attack animation and can deal damage on sword collision.")]
+    [Tooltip("If true, we are currently in an attack animation.")]
     public bool isAttacking = false;
 
-    private void Awake() 
+    // ----------------------------------
+    // NEW BLOCKING FIELD
+    // ----------------------------------
+    [Header("Block Settings")]
+    [Tooltip("If true, player is in a 'blocking' stance and will take reduced damage.")]
+    public bool isBlocking = false;
+
+    // Player Health
+    [Header("Player Health")]
+    [SerializeField] private int playerHealth = 100;
+
+    private void Awake()
     {
-        animator = GetComponent<Animator>(); 
+        animator = GetComponent<Animator>();
     }
 
     private void Start()
     {
-        // Start grounded
         animator.SetBool("isGrounded", true);
         animator.SetBool("isJumping", false);
     }
 
     private void Update()
     {
-        // --- Existing Movement ---
         Vector3 movement = new Vector3(movementX, 0f, movementY);
         animator.SetFloat("speed", movement.magnitude);
 
-        // Rotate only if there's input
-        if (movement.sqrMagnitude > 0.01f) 
+        if (movement.sqrMagnitude > 0.01f)
         {
             transform.rotation = Quaternion.Slerp(
-                transform.rotation, 
-                Quaternion.LookRotation(movement), 
+                transform.rotation,
+                Quaternion.LookRotation(movement),
                 0.15f
             );
         }
 
-        // Translate horizontally
         transform.Translate(movement * Time.deltaTime * speed, Space.World);
 
-        // --- Jump & Gravity ---
+        // Jump & Gravity
         if (isJumping)
         {
             verticalVelocity -= gravity * Time.deltaTime;
@@ -67,23 +72,19 @@ public class Player : MonoBehaviour
 
             if (transform.position.y <= 0f)
             {
-                // Snap to ground
                 Vector3 pos = transform.position;
                 pos.y = 0f;
                 transform.position = pos;
 
-                // Reset jump state
                 verticalVelocity = 0f;
                 isJumping = false;
-
-                // Update animator
                 animator.SetBool("isJumping", false);
                 animator.SetBool("isGrounded", true);
             }
         }
     }
 
-    // --- Input Callback for Movement ---
+    // --- Movement Input ---
     public void OnMovement(InputValue value)
     {
         Vector2 movementVector = value.Get<Vector2>();
@@ -91,7 +92,7 @@ public class Player : MonoBehaviour
         movementY = movementVector.y;
     }
 
-    // --- Jump Button: A ---
+    // --- Jump Button A ---
     public void OnA()
     {
         UpdateInputIndicator("A");
@@ -103,11 +104,11 @@ public class Player : MonoBehaviour
             animator.SetTrigger("JumpTrigger");
             animator.SetBool("isGrounded", true);
 
-            verticalVelocity = jumpHeight;        
+            verticalVelocity = jumpHeight;
         }
     }
 
-    // --- Other Buttons ---
+    // Other Buttons
     public void OnB()
     {
         UpdateInputIndicator("B");
@@ -128,12 +129,26 @@ public class Player : MonoBehaviour
         Debug.Log("Y");
     }
 
-    // --- Left Trigger: now does nothing (or remove if desired) ---
+    // --- Left Trigger: Now used for Blocking ---
     public void OnLeftTrigger()
     {
         UpdateInputIndicator("L Trigger");
         Debug.Log("L Trigger");
-        // No attack code here now
+
+        // Toggle blocking
+        isBlocking = !isBlocking;
+
+        // Later, you could trigger a block animation here:
+        // animator.SetBool("isBlocking", isBlocking);
+
+        if (isBlocking)
+        {
+            Debug.Log("Player started blocking!");
+        }
+        else
+        {
+            Debug.Log("Player stopped blocking!");
+        }
     }
 
     // --- Right Trigger: Attack ---
@@ -171,22 +186,27 @@ public class Player : MonoBehaviour
         inputIndicator.text = input;
     }
 
-    // ---------------------------------
-    // ATTACK HELPER (NO OverlapSphere)
-    // ---------------------------------
     private void PerformAttack()
     {
-        // Trigger the attack animation
         animator.SetTrigger("attack");
-
-        // Mark that we are currently in an attack
         isAttacking = true;
     }
 
-    // Called via Animation Event near the end of the clip
     public void EndAttack()
     {
         isAttacking = false;
         Debug.Log("Attack ended - no longer dealing damage on collision.");
+    }
+
+    // Player Takes Damage
+    public void TakeDamage(int damage)
+    {
+        playerHealth -= damage;
+        Debug.Log("Player took " + damage + " damage. Remaining Health = " + playerHealth);
+
+        if (playerHealth <= 0)
+        {
+            Debug.Log("Player is dead!");
+        }
     }
 }
