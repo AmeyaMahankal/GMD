@@ -1807,7 +1807,7 @@ GameObject:
   - component: {fileID: 1701645993}
   m_Layer: 0
   m_Name: Dummy
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1931,6 +1931,10 @@ MonoBehaviour:
   moveSpeed: 2
   stopDistance: 1.5
   baseDamageToPlayer: 5
+  detectionRange: 10
+  fovAngle: 30
+  killDistance: 2
+  killAngle: 45
 --- !u!54 &1701645993
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2111,6 +2115,8 @@ MonoBehaviour:
   isAttacking: 0
   isBlocking: 0
   playerHealth: 100
+  killDistance: 2
+  killAngle: 45
 --- !u!65 &1847058339
 BoxCollider:
   m_ObjectHideFlags: 0

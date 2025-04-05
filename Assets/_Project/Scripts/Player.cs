@@ -8,34 +8,33 @@ public class Player : MonoBehaviour
     private float movementX;
     private float movementY;
     private bool isCrouched = false;
+    private bool isStealthed = false;
     private Animator animator;
 
     [SerializeField] private float speed = 5;
     [SerializeField] public TextMeshProUGUI inputIndicator;
     [SerializeField] public TextMeshProUGUI crouchedIndicator;
 
-    // Jump fields
     [Header("Jump Settings")]
     [SerializeField] private float jumpHeight = 5f;
     [SerializeField] private float gravity = 9.81f;
     private float verticalVelocity = 0f;
     private bool isJumping = false;
 
-    // ATTACK
     [Header("Attack Settings")]
-    [Tooltip("If true, we are currently in an attack animation.")]
     public bool isAttacking = false;
 
-    // ----------------------------------
-    // NEW BLOCKING FIELD
-    // ----------------------------------
     [Header("Block Settings")]
-    [Tooltip("If true, player is in a 'blocking' stance and will take reduced damage.")]
     public bool isBlocking = false;
 
-    // Player Health
     [Header("Player Health")]
     [SerializeField] private int playerHealth = 100;
+
+    [Header("Stealth Kill Settings")]
+    [SerializeField] private float killDistance = 2f;
+    [SerializeField] private float killAngle = 45f;
+
+    public bool IsStealthed => isStealthed;
 
     private void Awake()
     {
@@ -64,7 +63,6 @@ public class Player : MonoBehaviour
 
         transform.Translate(movement * Time.deltaTime * speed, Space.World);
 
-        // Jump & Gravity
         if (isJumping)
         {
             verticalVelocity -= gravity * Time.deltaTime;
@@ -84,7 +82,6 @@ public class Player : MonoBehaviour
         }
     }
 
-    // --- Movement Input ---
     public void OnMovement(InputValue value)
     {
         Vector2 movementVector = value.Get<Vector2>();
@@ -92,99 +89,64 @@ public class Player : MonoBehaviour
         movementY = movementVector.y;
     }
 
-    // --- Jump Button A ---
     public void OnA()
     {
         UpdateInputIndicator("A");
-        Debug.Log("A");
 
         if (!isJumping)
         {
             isJumping = true;
             animator.SetTrigger("JumpTrigger");
             animator.SetBool("isGrounded", true);
-
             verticalVelocity = jumpHeight;
         }
     }
 
-    // Other Buttons
-    public void OnB()
-    {
-        UpdateInputIndicator("B");
-        Debug.Log("B");
-    }
+    public void OnB() => UpdateInputIndicator("B");
 
     public void OnX()
     {
         isCrouched = !isCrouched;
+        isStealthed = isCrouched;
         UpdateInputIndicator("X");
         UpdateCrouchIndicator();
-        Debug.Log("X");
+
+        Debug.Log(isStealthed ? "Player entered STEALTH mode!" : "Player exited STEALTH mode!");
     }
 
-    public void OnY()
-    {
-        UpdateInputIndicator("Y");
-        Debug.Log("Y");
-    }
+    public void OnY() => UpdateInputIndicator("Y");
 
-    // --- Left Trigger: Now used for Blocking ---
     public void OnLeftTrigger()
     {
         UpdateInputIndicator("L Trigger");
-        Debug.Log("L Trigger");
-
-        // Toggle blocking
         isBlocking = !isBlocking;
 
-        // Later, you could trigger a block animation here:
-        // animator.SetBool("isBlocking", isBlocking);
-
-        if (isBlocking)
-        {
-            Debug.Log("Player started blocking!");
-        }
-        else
-        {
-            Debug.Log("Player stopped blocking!");
-        }
+        Debug.Log(isBlocking ? "Player started blocking!" : "Player stopped blocking!");
     }
 
-    // --- Right Trigger: Attack ---
     public void OnRightTrigger()
     {
         UpdateInputIndicator("R Trigger");
-        Debug.Log("R Trigger");
 
-        PerformAttack();
-    }
-
-    public void OnStart()
-    {
-        UpdateInputIndicator("Start");
-        Debug.Log("Start");
-    }
-
-    // --- Helper Methods ---
-    private void UpdateCrouchIndicator()
-    {
-        if (isCrouched)
+        if (isStealthed)
         {
-            crouchedIndicator.text = "Crouched";
-            crouchedIndicator.color = Color.red;
+            TryStealthKill();
         }
         else
         {
-            crouchedIndicator.text = "Not Crouched.";
-            crouchedIndicator.color = Color.green;
+            PerformAttack();
         }
     }
 
-    private void UpdateInputIndicator(string input)
+    public void OnStart() => UpdateInputIndicator("Start");
+
+    private void UpdateCrouchIndicator()
     {
-        inputIndicator.text = input;
+        crouchedIndicator.text = isCrouched ? "Crouched" : "Not Crouched.";
+        crouchedIndicator.color = isCrouched ? Color.red : Color.green;
     }
+
+    private void UpdateInputIndicator(string input) => inputIndicator.text = input;
 
     private void PerformAttack()
     {
@@ -195,18 +157,67 @@ public class Player : MonoBehaviour
     public void EndAttack()
     {
         isAttacking = false;
-        Debug.Log("Attack ended - no longer dealing damage on collision.");
+        Debug.Log("Attack ended.");
     }
 
-    // Player Takes Damage
     public void TakeDamage(int damage)
     {
         playerHealth -= damage;
-        Debug.Log("Player took " + damage + " damage. Remaining Health = " + playerHealth);
+        Debug.Log($"Player took {damage} damage. Remaining Health = {playerHealth}");
 
         if (playerHealth <= 0)
-        {
             Debug.Log("Player is dead!");
+    }
+
+    private void TryStealthKill()
+    {
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        GameObject closestEnemy = null;
+        float closestDistance = Mathf.Infinity;
+
+        foreach (GameObject enemy in enemies)
+        {
+            float distance = Vector3.Distance(transform.position, enemy.transform.position);
+            if (distance < closestDistance && distance <= killDistance)
+            {
+                closestEnemy = enemy;
+                closestDistance = distance;
+            }
+        }
+
+        if (closestEnemy == null) return;
+
+        Vector3 toPlayer = (transform.position - closestEnemy.transform.position).normalized;
+        float dotProduct = Vector3.Dot(closestEnemy.transform.forward, toPlayer);
+        float requiredDot = Mathf.Cos(killAngle * Mathf.Deg2Rad);
+
+        Debug.Log($"dotProduct: {dotProduct}, requiredDot: {requiredDot}");
+
+        if (dotProduct > requiredDot)
+        {
+            Debug.Log("STEALTH KILL TRIGGERED");
+
+            Animator enemyAnimator = closestEnemy.GetComponentInChildren<Animator>();
+            if (enemyAnimator)
+            {
+                enemyAnimator.SetTrigger("Die");
+            }
+
+            DummyHealth health = closestEnemy.GetComponent<DummyHealth>();
+            if (health != null)
+            {
+                Debug.Log("Applying 999 damage to enemy...");
+                health.TakeDamage(999);
+            }
+            else
+            {
+                Debug.Log("DummyHealth not found, destroying object directly.");
+                Destroy(closestEnemy);
+            }
+        }
+        else
+        {
+            Debug.Log("Stealth kill failed — player not behind the enemy.");
         }
     }
 }

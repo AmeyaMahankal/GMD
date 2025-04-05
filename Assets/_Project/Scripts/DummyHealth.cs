@@ -11,12 +11,8 @@ public class DummyHealth : MonoBehaviour
 
         if (health <= 0)
         {
-            // Option 1: Destroy this dummy
+            Debug.Log(gameObject.name + " is dead!");
             Destroy(gameObject);
-            
-            // Or Option 2: Just log a message and do something else
-            // Debug.Log(gameObject.name + " is 'dead.'");
-            // this.gameObject.SetActive(false);
         }
     }
 }
