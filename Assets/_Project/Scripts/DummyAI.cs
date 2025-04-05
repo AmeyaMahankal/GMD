@@ -24,37 +24,39 @@ public class DummyAI : MonoBehaviour
     {
         if (player == null) return;
 
-        // Calculate distance to player
         float distanceToPlayer = Vector3.Distance(transform.position, player.transform.position);
 
-        // If too far, move closer
+        float detectionRange = 15f;
+
+        if (distanceToPlayer > detectionRange)
+        {
+            // Player is out of detection range — do nothing
+            return;
+        }
+
+        // Player is within detection range — proceed as usual
+
         if (distanceToPlayer > stopDistance)
         {
             MoveTowardsPlayer();
-
-            // Optionally reset the cooldown if you want a fresh 5s once it arrives
-            // currentCooldown = attackCooldown; 
         }
         else
         {
-            // Within stop distance -> stop & wait for cooldown to expire, then deal damage
             StopMoving();
 
-            // Count down
             currentCooldown -= Time.deltaTime;
 
             if (currentCooldown <= 0f)
             {
-                // Time to deal damage
                 int damage = player.isBlocking ? 2 : baseDamageToPlayer;
                 player.TakeDamage(damage);
                 Debug.Log($"Dummy attacked Player for {damage} damage. Next attack in 5 seconds.");
 
-                // Reset cooldown back to 5s
                 currentCooldown = attackCooldown;
             }
         }
     }
+
 
     private void MoveTowardsPlayer()
     {
