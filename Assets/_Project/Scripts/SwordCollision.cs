@@ -6,7 +6,7 @@ public class SwordCollision : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        Player player = GetComponentInParent<Player>();
+        PlayerScript player = GetComponentInParent<PlayerScript>();
         if (player != null && player.isAttacking)
         {
             DummyHealth dummy = other.GetComponent<DummyHealth>();

@@ -17,12 +17,12 @@ public class DummyAI : MonoBehaviour
     private float attackCooldown = 5f;
     private float currentCooldown;
 
-    private Player player;
+    private PlayerScript player;
     private bool playerDetected = false;
 
     private void Start()
     {
-        player = FindObjectOfType<Player>();
+        player = FindObjectOfType<PlayerScript>();
         currentCooldown = attackCooldown;
     }
 
