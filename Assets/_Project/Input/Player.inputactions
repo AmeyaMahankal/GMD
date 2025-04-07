@@ -18,7 +18,7 @@
                     "name": "A",
                     "type": "Button",
                     "id": "4171c056-d2bb-44e2-96a4-c06e083a8638",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -27,7 +27,7 @@
                     "name": "B",
                     "type": "Button",
                     "id": "4585ba7c-6eb6-421d-8c67-27557b1c45fa",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -36,7 +36,7 @@
                     "name": "X",
                     "type": "Button",
                     "id": "4c616a9f-4761-4b46-8348-36630aa4a644",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -45,7 +45,7 @@
                     "name": "Y",
                     "type": "Button",
                     "id": "2e1e21a2-d033-4eca-8cc5-2cc2f0b8d2c1",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -54,7 +54,7 @@
                     "name": "LeftTrigger",
                     "type": "Button",
                     "id": "3660fc7c-d1eb-45b4-a9c2-4460a71fc008",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -63,7 +63,7 @@
                     "name": "RightTrigger",
                     "type": "Button",
                     "id": "9ddf46ee-17b0-447c-86cf-92214cd73ac5",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -72,7 +72,7 @@
                     "name": "Start",
                     "type": "Button",
                     "id": "8c0089ad-a813-4175-8bb7-0d083649c008",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
