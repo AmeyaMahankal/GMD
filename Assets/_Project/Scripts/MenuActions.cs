@@ -31,7 +31,7 @@ public class MenuActions : MonoBehaviour
         if (currentMenu != mainMenu) {
          SelectButton(currentMenu, "ReturnToMainMenuButton");
         }
-        else {
+        else { 
             SelectButton(currentMenu, "StartButton");
         }
     }
