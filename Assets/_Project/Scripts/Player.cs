@@ -19,14 +19,14 @@ public class Player : MonoBehaviour
     [SerializeField] private float speed = 5;
     [SerializeField] public TextMeshProUGUI  inputIndicator;
     [SerializeField] public TextMeshProUGUI  crouchedIndicator;
+    [SerializeField] public TextMeshProUGUI  pickUpIndicator;
+
+
+    private DroppedItem nearbyItem;
 
     private void Awake() {
         animator = GetComponent<Animator>(); 
     }
-    private void Start()
-    {
-    }
-
     private void Update()
     {
         Vector3 movement = new Vector3(movementX, 0.0f, movementY);
@@ -56,16 +56,21 @@ public class Player : MonoBehaviour
 
     public void OnB()
     {
+        isCrouched = !isCrouched;
         UpdateInputIndicator("B");
+        UpdateCrouchIndicator();
         Debug.Log("B");
 
     }
 
     public void OnX()
     {
-        isCrouched = !isCrouched;
         UpdateInputIndicator("X");
-        UpdateCrouchIndicator();
+        if (nearbyItem != null && !nearbyItem.pickedUp) {
+            PickupItem(nearbyItem);
+            pickUpIndicator.text = "";
+            nearbyItem = null;
+        }
         Debug.Log("X");
     }
 
@@ -110,5 +115,38 @@ public class Player : MonoBehaviour
     private void UpdateInputIndicator(string input)
     {
         inputIndicator.text = input;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("DroppedItem"))
+        {
+            var item = other.GetComponent<DroppedItem>();
+            if (item != null && !item.pickedUp)
+            {
+                nearbyItem = item;
+                pickUpIndicator.text = "Press X To Pick Up";
+            }
+
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("DroppedItem"))
+        {
+            var item = other.GetComponent<DroppedItem>();
+            if (item != null && nearbyItem == item)
+            {
+                nearbyItem = null;
+                pickUpIndicator.text = "";
+            }
+        }
+    }
+
+    private void PickupItem(DroppedItem item)
+    {
+        var inventoryManager = GetComponent<InventoryManager>();
+        inventoryManager.PickupDroppedItem(item);
     }
 }

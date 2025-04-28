@@ -12,6 +12,12 @@ public class DroppedItem : MonoBehaviour
 
    void Start()
    {
+      var collider = GetComponent<Collider>();
+      if (collider != null)
+      {
+         collider.enabled = false; // disable immediately
+      }
+      
       if (autoStart && item != null)
       {
          Initialize(item);
