@@ -10,23 +10,26 @@ public class Player : MonoBehaviour
     private Vector2 movement;
     private float movementX;
     private float movementY;
-    private bool isCrouched = false;
     private Animator animator;
     
-    public static readonly float animeSpeed = Animator.StringToHash("speed");
-    
-    
+
+
     [SerializeField] private float speed = 5;
     [SerializeField] public TextMeshProUGUI  inputIndicator;
     [SerializeField] public TextMeshProUGUI  crouchedIndicator;
+    [SerializeField] public TextMeshProUGUI  pickUpIndicator;
+
+    private bool isCrouched = false;
+    private bool IsInteractingWithContinuousCollectible = false;
+
+    private static readonly int IsCrouchedHash = Animator.StringToHash("IsCrouching");
+    public static readonly float animeSpeedHash = Animator.StringToHash("speed");
+    public static readonly int IsInteractingWithContinuousCollectibleHash = Animator.StringToHash("IsInteractingWithContinuousCollectible");
+    private DroppedItem nearbyItem;
 
     private void Awake() {
         animator = GetComponent<Animator>(); 
     }
-    private void Start()
-    {
-    }
-
     private void Update()
     {
         Vector3 movement = new Vector3(movementX, 0.0f, movementY);
@@ -56,16 +59,26 @@ public class Player : MonoBehaviour
 
     public void OnB()
     {
+        isCrouched = !isCrouched;
+
         UpdateInputIndicator("B");
-        Debug.Log("B");
+        UpdateCrouchIndicator();
+        animator.SetBool(IsCrouchedHash, isCrouched);
 
     }
 
     public void OnX()
     {
-        isCrouched = !isCrouched;
         UpdateInputIndicator("X");
-        UpdateCrouchIndicator();
+        if (nearbyItem != null && !nearbyItem.pickedUp) {
+            PickupItem(nearbyItem);
+            pickUpIndicator.text = "";
+            nearbyItem = null;
+        }
+        
+        //opening a chest or a continous interctable. 
+        //IsInteractingWithContinuousCollectible = !IsInteractingWithContinuousCollectible;
+        //animator.SetBool(IsInteractingWithContinuousCollectibleHash, IsInteractingWithContinuousCollectible);
         Debug.Log("X");
     }
 
@@ -110,5 +123,38 @@ public class Player : MonoBehaviour
     private void UpdateInputIndicator(string input)
     {
         inputIndicator.text = input;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("DroppedItem"))
+        {
+            var item = other.GetComponent<DroppedItem>();
+            if (item != null && !item.pickedUp)
+            {
+                nearbyItem = item;
+                pickUpIndicator.text = "Press X To Pick Up";
+            }
+
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("DroppedItem"))
+        {
+            var item = other.GetComponent<DroppedItem>();
+            if (item != null && nearbyItem == item)
+            {
+                nearbyItem = null;
+                pickUpIndicator.text = "";
+            }
+        }
+    }
+
+    private void PickupItem(DroppedItem item)
+    {
+        var inventoryManager = GetComponent<InventoryManager>();
+        inventoryManager.PickupDroppedItem(item);
     }
 }
