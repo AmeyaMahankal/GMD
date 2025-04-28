@@ -10,11 +10,8 @@ public class Player : MonoBehaviour
     private Vector2 movement;
     private float movementX;
     private float movementY;
-    private bool isCrouched = false;
     private Animator animator;
     
-    public static readonly float animeSpeed = Animator.StringToHash("speed");
-    private static readonly int IsCrouched = Animator.StringToHash("IsCrouching");
 
 
     [SerializeField] private float speed = 5;
@@ -22,7 +19,12 @@ public class Player : MonoBehaviour
     [SerializeField] public TextMeshProUGUI  crouchedIndicator;
     [SerializeField] public TextMeshProUGUI  pickUpIndicator;
 
+    private bool isCrouched = false;
+    private bool IsInteractingWithContinuousCollectible = false;
 
+    private static readonly int IsCrouchedHash = Animator.StringToHash("IsCrouching");
+    public static readonly float animeSpeedHash = Animator.StringToHash("speed");
+    public static readonly int IsInteractingWithContinuousCollectibleHash = Animator.StringToHash("IsInteractingWithContinuousCollectible");
     private DroppedItem nearbyItem;
 
     private void Awake() {
@@ -58,11 +60,10 @@ public class Player : MonoBehaviour
     public void OnB()
     {
         isCrouched = !isCrouched;
-        Debug.Log($"Crouch toggled: {isCrouched}");  // Debug log to confirm toggling
 
         UpdateInputIndicator("B");
         UpdateCrouchIndicator();
-        animator.SetBool(IsCrouched, isCrouched);
+        animator.SetBool(IsCrouchedHash, isCrouched);
 
     }
 
@@ -74,6 +75,10 @@ public class Player : MonoBehaviour
             pickUpIndicator.text = "";
             nearbyItem = null;
         }
+        
+        //opening a chest or a continous interctable. 
+        //IsInteractingWithContinuousCollectible = !IsInteractingWithContinuousCollectible;
+        //animator.SetBool(IsInteractingWithContinuousCollectibleHash, IsInteractingWithContinuousCollectible);
         Debug.Log("X");
     }
 
