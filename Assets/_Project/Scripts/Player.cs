@@ -14,8 +14,9 @@ public class Player : MonoBehaviour
     private Animator animator;
     
     public static readonly float animeSpeed = Animator.StringToHash("speed");
-    
-    
+    private static readonly int IsCrouched = Animator.StringToHash("IsCrouching");
+
+
     [SerializeField] private float speed = 5;
     [SerializeField] public TextMeshProUGUI  inputIndicator;
     [SerializeField] public TextMeshProUGUI  crouchedIndicator;
@@ -57,9 +58,11 @@ public class Player : MonoBehaviour
     public void OnB()
     {
         isCrouched = !isCrouched;
+        Debug.Log($"Crouch toggled: {isCrouched}");  // Debug log to confirm toggling
+
         UpdateInputIndicator("B");
         UpdateCrouchIndicator();
-        Debug.Log("B");
+        animator.SetBool(IsCrouched, isCrouched);
 
     }
 
