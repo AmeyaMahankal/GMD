@@ -18,7 +18,6 @@ AnimatorStateMachine:
   - serializedVersion: 1
     m_State: {fileID: -6081367255960680670}
     m_Position: {x: 230, y: 70, z: 0}
-
   m_ChildStateMachines: []
   m_AnyStateTransitions: []
   m_EntryTransitions: []
@@ -29,6 +28,7 @@ AnimatorStateMachine:
   m_ExitPosition: {x: 400, y: 180, z: 0}
   m_ParentStateMachinePosition: {x: 800, y: 20, z: 0}
   m_DefaultState: {fileID: -4107205563712106743}
+--- !u!1102 &-9058150436364742265
 AnimatorState:
   serializedVersion: 6
   m_ObjectHideFlags: 1
@@ -56,7 +56,6 @@ AnimatorState:
   m_CycleOffsetParameter: 
   m_TimeParameter: 
 --- !u!1102 &-6081367255960680670
-
 AnimatorState:
   serializedVersion: 6
   m_ObjectHideFlags: 1
@@ -84,7 +83,6 @@ AnimatorState:
   m_CycleOffsetParameter: 
   m_TimeParameter: 
 --- !u!1102 &-4107205563712106743
-
 AnimatorState:
   serializedVersion: 6
   m_ObjectHideFlags: 1
@@ -189,7 +187,6 @@ AnimatorStateTransition:
   m_CanTransitionToSelf: 1
 --- !u!206 &-61730802786428632
 BlendTree:
-
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -254,7 +251,6 @@ AnimatorController:
     m_SyncedLayerAffectsTiming: 0
     m_Controller: {fileID: 9100000}
 --- !u!206 &2560351867346575682
-
 BlendTree:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
