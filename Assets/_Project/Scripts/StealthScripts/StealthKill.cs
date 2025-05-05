@@ -38,7 +38,7 @@ public class StealthKill : MonoBehaviour
         float dotProduct = Vector3.Dot(closestEnemy.transform.forward, toPlayer);
         float requiredDot = Mathf.Cos(killAngle * Mathf.Deg2Rad);
 
-        if (dotProduct > requiredDot)  // Ensures the player is behind enemy
+        if (dotProduct < -requiredDot)  // Ensures the player is behind enemy
         {
             PerformStealthKill(closestEnemy);
         }
