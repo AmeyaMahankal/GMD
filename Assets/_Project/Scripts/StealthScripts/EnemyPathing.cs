@@ -15,7 +15,8 @@ public class EnemyPathing : MonoBehaviour
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
-        animator = GetComponent<Animator>();
+        animator = GetComponentInChildren<Animator>();
+
     }
 
     private void Start()
@@ -35,6 +36,9 @@ public class EnemyPathing : MonoBehaviour
                 agent.destination = path.GetNextWaypoint();
             }
         }
+
+        float normalizedSpeed = Mathf.InverseLerp(0, agent.speed, agent.velocity.magnitude);
+        animator.SetFloat("Speed", normalizedSpeed);
     }
 }
 
