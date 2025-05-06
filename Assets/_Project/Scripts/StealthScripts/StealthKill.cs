@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 
 public class StealthKill : MonoBehaviour
 {
@@ -51,12 +52,19 @@ public class StealthKill : MonoBehaviour
         if (enemyAnimator)
         {
             enemyAnimator.SetTrigger("Die");
+        }
 
+        NavMeshAgent enemyAgent = enemy.GetComponent<NavMeshAgent>();
+        if (enemyAgent != null && enemyAgent.isActiveAndEnabled)
+        {
+            enemyAgent.enabled = false; 
         }
 
         Destroy(enemy, 4f);
-
     }
+
+
+
 
 
 }

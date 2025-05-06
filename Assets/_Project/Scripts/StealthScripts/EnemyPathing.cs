@@ -3,11 +3,10 @@ using UnityEngine.AI;
 
 public class EnemyPathing : MonoBehaviour
 {
-
     [SerializeField] float waitTimeOnWayPoint = 1f;
     [SerializeField] WaypointPath path;
 
-    NavMeshAgent agent;
+    private NavMeshAgent agent;
     Animator animator;
 
     float time = 0f;
@@ -16,30 +15,43 @@ public class EnemyPathing : MonoBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponentInChildren<Animator>();
-
     }
 
     private void Start()
     {
-       agent.SetDestination(path.GetNextWaypoint());
- 
+        if (path != null && agent != null && agent.isActiveAndEnabled)
+        {
+            agent.SetDestination(path.GetNextWaypoint());
+        }
     }
 
     private void Update()
     {
-        if (agent.remainingDistance < 0.1f)
+        if (agent != null && agent.isActiveAndEnabled)
         {
-            time += Time.deltaTime;
-            if (time >= waitTimeOnWayPoint)
+            if (agent.remainingDistance < 0.1f)
             {
-                time = 0f;
-                agent.destination = path.GetNextWaypoint();
+                time += Time.deltaTime;
+                if (time >= waitTimeOnWayPoint && path != null)
+                {
+                    time = 0f;
+                    agent.destination = path.GetNextWaypoint();
+                }
+            }
+
+            float normalizedSpeed = Mathf.InverseLerp(0, agent.speed, agent.velocity.magnitude);
+            if (animator != null)
+            {
+                animator.SetFloat("Speed", normalizedSpeed);
             }
         }
+    }
 
-        float normalizedSpeed = Mathf.InverseLerp(0, agent.speed, agent.velocity.magnitude);
-        animator.SetFloat("Speed", normalizedSpeed);
+    public void DisableAgent()
+    {
+        if (agent != null && agent.isActiveAndEnabled)
+        {
+            agent.enabled = false;
+        }
     }
 }
-
-
