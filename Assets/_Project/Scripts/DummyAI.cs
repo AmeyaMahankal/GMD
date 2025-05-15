@@ -33,7 +33,7 @@ public class DummyAI : MonoBehaviour
         float distanceToPlayer = Vector3.Distance(transform.position, player.transform.position);
 
         // Detect player only if within range AND inside FOV
-        if (distanceToPlayer <= detectionRange && IsPlayerInFOV())
+        if (distanceToPlayer <= detectionRange && InFOV(transform, player.transform, fovAngle, detectionRange))
         {
             playerDetected = true;
         }
@@ -62,13 +62,37 @@ public class DummyAI : MonoBehaviour
         }
     }
 
-    private bool IsPlayerInFOV()
+    private bool InFOV(Transform checkingObject, Transform target, float maxAngle, float maxRadius)
     {
-        Vector3 directionToPlayer = (player.transform.position - transform.position).normalized;
-        directionToPlayer.y = 0;
+        Collider[] overlaps = new Collider[10];
+        int count = Physics.OverlapSphereNonAlloc(checkingObject.position, maxRadius, overlaps);
 
-        float angle = Vector3.Angle(transform.forward, directionToPlayer);
-        return angle <= fovAngle;
+        for (int i = 0; i < count; i++)
+        {
+            if (overlaps[i] != null && overlaps[i].transform == target)
+            {
+                Vector3 directionBetween = (target.position - checkingObject.position).normalized;
+                directionBetween.y = 0;
+
+                float angle = Vector3.Angle(checkingObject.forward, directionBetween);
+
+                if (angle <= maxAngle)
+                {
+                    Ray ray = new Ray(checkingObject.position, target.position - checkingObject.position);
+                    RaycastHit hit;
+
+                    if (Physics.Raycast(ray, out hit, maxRadius))
+                    {
+                        if (hit.transform == target)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     private void MoveTowardsPlayer()

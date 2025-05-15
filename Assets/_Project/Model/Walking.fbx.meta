@@ -1,39 +1,9 @@
 fileFormatVersion: 2
-guid: 51e14a5fcad89684ca35214c67c27cc6
+guid: e1b53d8f2fbf5fc4c9c44fe9bcbcbfd3
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: parasitezombie_Material
-    second: {fileID: 2100000, guid: 67e3d3cbe384cc44385970d7e8ba6192, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: parasitezombie_Material1
-    second: {fileID: 2100000, guid: 5aed4a2a4b0a8954dae5b4e86ba9839c, type: 2}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: parasiteZombie_body_diffuse
-    second: {fileID: 2800000, guid: f90bdccd8bc01e044bb1c03031ead4e7, type: 3}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: parasiteZombie_diffuse
-    second: {fileID: 2800000, guid: c0c9e187b096b25498827c302551a71b, type: 3}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: parasiteZombie_normal
-    second: {fileID: 2800000, guid: 6fe3a6f2b3a37534e9273afcb511c22b, type: 3}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: parasiteZombie_specular
-    second: {fileID: 2800000, guid: 1a6eea68fb610184daa416413177268c, type: 3}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -61,11 +31,11 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: ZombieIdle
+      name: ZombieWalk
       takeName: mixamo.com
       internalID: -203655887218126122
       firstFrame: 0
-      lastFrame: 240
+      lastFrame: 242
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
