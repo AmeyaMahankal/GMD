@@ -1,48 +1,39 @@
 using UnityEngine;
 using UnityEngine.AI;
 
-//
-// Attach *both* this script and EnemyPathing to the same GameObject.
-// EnemyPathing handles patrol; DummyAI takes over for chase / attack.
-//
-
 [RequireComponent(typeof(NavMeshAgent), typeof(EnemyPathing))]
 public class DummyAI : MonoBehaviour
 {
-    // ──────────── Inspector ────────────
     [Header("References")]
-    public Transform player;                       // optional; auto-found at runtime
+    public Transform player;
 
     [Header("Movement / Combat")]
-    [SerializeField] private float stopDistance       = 1.5f;
-    [SerializeField] private int   baseDamageToPlayer = 5;
-    [SerializeField] private float attackCooldown     = 5f;
+    [SerializeField] private float stopDistance = 1.5f;
+    [SerializeField] private int baseDamageToPlayer = 5;
+    [SerializeField] private float attackCooldown = 5f;
 
     [Header("Detection")]
-    [SerializeField] private float detectionRange     = 15f;
-    [SerializeField] private float fovAngle           = 90f;   // 90° left + 90° right
+    [SerializeField] private float detectionRange = 15f;
+    [SerializeField] private float fovAngle = 45f;
 
     [Header("Stealth-Kill")]
-    [SerializeField] private float killDistance       = 2f;
-    [SerializeField] private float killAngle          = 45f;
+    [SerializeField] private float killDistance = 2f;
+    [SerializeField] private float killAngle = 45f;
 
-    // ──────────── Internal state ────────────
     private enum AIState { Patrol, Chase, Attack }
-    private AIState       state = AIState.Patrol;
+    private AIState state = AIState.Patrol;
 
-    private NavMeshAgent  agent;
-    private EnemyPathing  patrol;
-    private PlayerScript  playerScript;
+    private NavMeshAgent agent;
+    private EnemyPathing patrol;
+    private PlayerScript playerScript;
 
-    private float         cooldown;
-    private float         lostTimer;
-    private const float   LOST_SIGHT_GRACE = 3f;     // how long to “search” before giving up
+    private float cooldown;
+    private float lostTimer;
+    private const float LOST_SIGHT_GRACE = 3f;
 
-    // ───────────────────────────────────────────────────────────────
-    #region Unity lifecycle
     private void Awake()
     {
-        agent  = GetComponent<NavMeshAgent>();
+        agent = GetComponent<NavMeshAgent>();
         patrol = GetComponent<EnemyPathing>();
         CachePlayerReference();
     }
@@ -54,24 +45,34 @@ public class DummyAI : MonoBehaviour
 
     private void Update()
     {
-        if (playerScript == null || playerScript.IsStealthed) return;
+        if (playerScript == null) return;
 
         float distance = Vector3.Distance(transform.position, player.position);
-        bool  inSight  = distance <= detectionRange &&
-                         InFOV(transform, player, fovAngle, detectionRange);
+
+        // NEW: Smarter detection based on crouch status
+        bool inSight = false;
+
+        if (playerScript.IsStealthed)
+        {
+            inSight = distance <= detectionRange &&
+                      InFOV(transform, player, fovAngle, detectionRange);
+        }
+        else
+        {
+            inSight = distance <= detectionRange;
+        }
 
         switch (state)
         {
-            // ───────────────────── PATROL ─────────────────────
             case AIState.Patrol:
                 if (inSight)
                 {
                     patrol.StopPatrol();
+                    agent.isStopped = false;
                     state = AIState.Chase;
                 }
                 break;
 
-            // ───────────────────── CHASE ──────────────────────
             case AIState.Chase:
                 if (inSight)
                 {
@@ -79,13 +80,32 @@ public class DummyAI : MonoBehaviour
                     agent.SetDestination(player.position);
                     lostTimer = LOST_SIGHT_GRACE;
 
+                    RotateTowardPlayer();
+
                     if (distance <= stopDistance)
+                    {
                         state = AIState.Attack;
+                    }
                 }
                 else
                 {
                     lostTimer -= Time.deltaTime;
-                    if (lostTimer <= 0f)
+
+                    if (lostTimer > 0f)
+                    {
+                        if (!agent.pathPending && agent.remainingDistance < 0.2f)
+                        {
+                            Vector3 searchOffset = Random.insideUnitSphere * 2f;
+                            searchOffset.y = 0;
+                            Vector3 searchPosition = player.position + searchOffset;
+
+                            if (NavMesh.SamplePosition(searchPosition, out NavMeshHit hit, 2f, NavMesh.AllAreas))
+                            {
+                                agent.SetDestination(hit.position);
+                            }
+                        }
+                    }
+                    else
                     {
                         patrol.StartPatrol();
                         state = AIState.Patrol;
@@ -93,10 +113,11 @@ public class DummyAI : MonoBehaviour
                 }
                 break;
 
-            // ───────────────────── ATTACK ─────────────────────
             case AIState.Attack:
-                agent.isStopped = true;             // stand still while striking
+                agent.isStopped = true;
                 cooldown -= Time.deltaTime;
+
+                RotateTowardPlayer();
 
                 if (cooldown <= 0f)
                 {
@@ -105,15 +126,28 @@ public class DummyAI : MonoBehaviour
                     cooldown = attackCooldown;
                 }
 
-                if (distance > stopDistance)        // player moved away
+                if (distance > stopDistance)
+                {
+                    cooldown = attackCooldown;
+                    agent.isStopped = false;
                     state = AIState.Chase;
+                }
                 break;
         }
     }
-    #endregion
-    // ───────────────────────────────────────────────────────────────
-    #region Helper methods
-    /// <summary>Finds / caches PlayerScript and its Transform.</summary>
+
+    private void RotateTowardPlayer()
+    {
+        Vector3 direction = (player.position - transform.position).normalized;
+        direction.y = 0f;
+
+        if (direction != Vector3.zero)
+        {
+            Quaternion lookRotation = Quaternion.LookRotation(direction);
+            transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 10f);
+        }
+    }
+
     private void CachePlayerReference()
     {
         if (player != null)
@@ -126,7 +160,6 @@ public class DummyAI : MonoBehaviour
         }
     }
 
-    /// <summary>Returns true if <paramref name="target"/> is inside a forward cone.</summary>
     public static bool InFOV(Transform origin, Transform target, float maxAngle, float maxRadius)
     {
         Collider[] overlaps = new Collider[10];
@@ -143,30 +176,25 @@ public class DummyAI : MonoBehaviour
 
                 if (Physics.Raycast(origin.position, target.position - origin.position,
                                     out RaycastHit hit, maxRadius) &&
-                                    hit.transform == target)
+                    hit.transform == target)
                     return true;
             }
         }
         return false;
     }
-    #endregion
-    // ───────────────────────────────────────────────────────────────
-    #region Gizmos (scene-view debug only)
+
 #if UNITY_EDITOR
     private void OnDrawGizmos()
     {
-        // vision radius
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, detectionRange);
 
-        // FOV edges
-        Vector3 left  = Quaternion.AngleAxis( fovAngle, transform.up) * transform.forward * detectionRange;
+        Vector3 left = Quaternion.AngleAxis(fovAngle, transform.up) * transform.forward * detectionRange;
         Vector3 right = Quaternion.AngleAxis(-fovAngle, transform.up) * transform.forward * detectionRange;
         Gizmos.color = Color.cyan;
         Gizmos.DrawRay(transform.position, left);
         Gizmos.DrawRay(transform.position, right);
 
-        // ray to player: green if in FOV, red if not
         if (player != null)
         {
             bool inside = InFOV(transform, player, fovAngle, detectionRange);
@@ -175,17 +203,14 @@ public class DummyAI : MonoBehaviour
                            (player.position - transform.position).normalized * detectionRange);
         }
 
-        // stealth-kill radius
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, killDistance);
 
-        // back-stab window
-        Vector3 killL = Quaternion.AngleAxis( killAngle, transform.up) * -transform.forward * killDistance;
+        Vector3 killL = Quaternion.AngleAxis(killAngle, transform.up) * -transform.forward * killDistance;
         Vector3 killR = Quaternion.AngleAxis(-killAngle, transform.up) * -transform.forward * killDistance;
-        Gizmos.color = new Color(1f, 0f, 1f);   // magenta
+        Gizmos.color = new Color(1f, 0f, 1f);
         Gizmos.DrawRay(transform.position, killL);
         Gizmos.DrawRay(transform.position, killR);
     }
 #endif
-    #endregion
 }
