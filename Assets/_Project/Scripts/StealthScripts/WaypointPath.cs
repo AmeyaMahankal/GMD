@@ -2,56 +2,72 @@ using UnityEngine;
 
 public class WaypointPath : MonoBehaviour
 {
-    public enum PathType
-    {
-        Loop,
-        ReverseWhenComplete
-    }
+    public enum PathType { Loop, ReverseWhenComplete }
 
     public Transform[] waypoints;
-    public PathType pathType = PathType.Loop;
+    public PathType    pathType = PathType.Loop;
 
+    private int index;
     private int direction = 1;
-    int index;
 
-    public Vector3 GetCurrentWayPoint()
+    // ─────────────────────────────────────────────────────────
+    // NEW ❶  —  returns position of nearest waypoint
+    public Vector3 GetClosestWaypoint(Vector3 fromPos)
     {
+        index = GetClosestWaypointIndex(fromPos);   // sets internal index
         return waypoints[index].position;
     }
 
+    // NEW ❷  —  returns index of nearest waypoint without changing 'index'
+    public int GetClosestWaypointIndex(Vector3 fromPos)
+    {
+        if (waypoints == null || waypoints.Length == 0)
+            return 0;
+
+        float bestDistSqr = Mathf.Infinity;
+        int   best        = 0;
+
+        for (int i = 0; i < waypoints.Length; i++)
+        {
+            float d = (fromPos - waypoints[i].position).sqrMagnitude;
+            if (d < bestDistSqr)
+            {
+                bestDistSqr = d;
+                best        = i;
+            }
+        }
+        return best;
+    }
+    // ─────────────────────────────────────────────────────────
+
+    public Vector3 GetCurrentWayPoint() => waypoints[index].position;
+
     public Vector3 GetNextWaypoint()
     {
-        if (waypoints.Length == 0)
-        {
-            return transform.position;
-        }
+        if (waypoints.Length == 0) return transform.position;
 
-        index = GetNetWaypointIndex();
-        Vector3 nextWaypoint = waypoints[index].position;
-
-        return nextWaypoint;
+        index = GetNextWaypointIndex();
+        return waypoints[index].position;
     }
 
-    private int GetNetWaypointIndex()
+    private int GetNextWaypointIndex()
     {
         index += direction;
 
         if (pathType == PathType.Loop)
         {
-            index %= waypoints.Length;
+            index = (index + waypoints.Length) % waypoints.Length;
         }
         else if (pathType == PathType.ReverseWhenComplete)
         {
             if (index >= waypoints.Length || index < 0)
             {
                 direction *= -1;
-                index += direction * 2;
+                index     += direction * 2;
             }
         }
-
         return index;
     }
-
     private void OnDrawGizmos()
     {
         if (waypoints == null || waypoints.Length == 0)
