@@ -102,16 +102,20 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
-    public void OnB() => UpdateInputIndicator("B");
-
-    public void OnX()
+    public void OnB()
     {
         isCrouched = !isCrouched;
         isStealthed = isCrouched;
-        UpdateInputIndicator("X");
+        UpdateInputIndicator("B");
         UpdateCrouchIndicator();
 
         Debug.Log(isStealthed ? "Player entered STEALTH mode!" : "Player exited STEALTH mode!");
+    }
+
+    public void OnX()
+    {
+        UpdateInputIndicator("X");
+        // Optional: Leave empty or remove.
     }
 
     public void OnY() => UpdateInputIndicator("Y");
