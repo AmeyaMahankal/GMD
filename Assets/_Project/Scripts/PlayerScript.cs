@@ -23,6 +23,7 @@ public class PlayerScript : MonoBehaviour
 
     [Header("Attack Settings")]
     public bool isAttacking = false;
+    [SerializeField] private SwordCollision swordCollision; // Reference to the sword collider script
 
     [Header("Block Settings")]
     public bool isBlocking = false;
@@ -39,6 +40,9 @@ public class PlayerScript : MonoBehaviour
     private void Awake()
     {
         animator = GetComponent<Animator>();
+
+        if (swordCollision == null)
+            swordCollision = GetComponentInChildren<SwordCollision>();
     }
 
     private void Start()
@@ -115,7 +119,6 @@ public class PlayerScript : MonoBehaviour
     public void OnX()
     {
         UpdateInputIndicator("X");
-        // Optional: Leave empty or remove.
     }
 
     public void OnY() => UpdateInputIndicator("Y");
@@ -155,13 +158,36 @@ public class PlayerScript : MonoBehaviour
     private void PerformAttack()
     {
         animator.SetTrigger("attack");
+        // isAttacking, hitbox control will be handled by animation events
+    }
+
+    // Called by animation events
+    public void StartAttack()
+    {
         isAttacking = true;
+        Debug.Log("Attack started — can now deal damage.");
     }
 
     public void EndAttack()
     {
         isAttacking = false;
-        Debug.Log("Attack ended.");
+        Debug.Log("Attack ended — damage disabled.");
+    }
+
+    // Relay methods for sword collider — called via animation events
+    public void EnableSwordHitbox()
+    {
+        swordCollision?.EnableSwordCollider();
+    }
+
+    public void DisableSwordHitbox()
+    {
+        swordCollision?.DisableSwordCollider();
+    }
+
+    public void ResetSwordHit()
+    {
+        swordCollision?.ResetHit();
     }
 
     public void TakeDamage(int damage)
