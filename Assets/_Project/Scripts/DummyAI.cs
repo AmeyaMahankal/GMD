@@ -8,9 +8,11 @@ public class DummyAI : MonoBehaviour
     public Transform player;
 
     [Header("Movement / Combat")]
-    [SerializeField] private float stopDistance = 1.5f;
+    [SerializeField] private float stopDistance = 2f;
     [SerializeField] private int baseDamageToPlayer = 5;
     [SerializeField] private float attackCooldown = 5f;
+    [SerializeField] private AudioClip swordSwingSFX;
+    [SerializeField] private SwordCollision swordCollision;
 
     [Header("Detection")]
     [SerializeField] private float detectionRange = 15f;
@@ -26,6 +28,8 @@ public class DummyAI : MonoBehaviour
     private NavMeshAgent agent;
     private EnemyPathing patrol;
     private PlayerScript playerScript;
+    private Animator animator;
+    private AudioSource audioSource;
 
     private float cooldown;
     private float lostTimer;
@@ -35,6 +39,12 @@ public class DummyAI : MonoBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
         patrol = GetComponent<EnemyPathing>();
+        animator = GetComponent<Animator>();
+        audioSource = GetComponent<AudioSource>();
+
+        if (swordCollision == null)
+            swordCollision = GetComponentInChildren<SwordCollision>();
+
         CachePlayerReference();
     }
 
@@ -48,19 +58,9 @@ public class DummyAI : MonoBehaviour
         if (playerScript == null) return;
 
         float distance = Vector3.Distance(transform.position, player.position);
-
-        // NEW: Smarter detection based on crouch status
-        bool inSight = false;
-
-        if (playerScript.IsStealthed)
-        {
-            inSight = distance <= detectionRange &&
-                      InFOV(transform, player, fovAngle, detectionRange);
-        }
-        else
-        {
-            inSight = distance <= detectionRange;
-        }
+        bool inSight = playerScript.IsStealthed
+            ? distance <= detectionRange && InFOV(transform, player, fovAngle, detectionRange)
+            : distance <= detectionRange;
 
         switch (state)
         {
@@ -77,12 +77,20 @@ public class DummyAI : MonoBehaviour
                 if (inSight)
                 {
                     agent.isStopped = false;
-                    agent.SetDestination(player.position);
+
+                    Vector3 dir = (player.position - transform.position).normalized;
+                    Vector3 targetPos = player.position - dir * stopDistance;
+
+                    if (NavMesh.SamplePosition(targetPos, out NavMeshHit hit, 1.0f, NavMesh.AllAreas))
+                    {
+                        agent.SetDestination(hit.position);
+                    }
+
                     lostTimer = LOST_SIGHT_GRACE;
 
                     RotateTowardPlayer();
 
-                    if (distance <= stopDistance)
+                    if (distance <= stopDistance + 0.1f)
                     {
                         state = AIState.Attack;
                     }
@@ -90,22 +98,7 @@ public class DummyAI : MonoBehaviour
                 else
                 {
                     lostTimer -= Time.deltaTime;
-
-                    if (lostTimer > 0f)
-                    {
-                        if (!agent.pathPending && agent.remainingDistance < 0.2f)
-                        {
-                            Vector3 searchOffset = Random.insideUnitSphere * 2f;
-                            searchOffset.y = 0;
-                            Vector3 searchPosition = player.position + searchOffset;
-
-                            if (NavMesh.SamplePosition(searchPosition, out NavMeshHit hit, 2f, NavMesh.AllAreas))
-                            {
-                                agent.SetDestination(hit.position);
-                            }
-                        }
-                    }
-                    else
+                    if (lostTimer <= 0f)
                     {
                         patrol.StartPatrol();
                         state = AIState.Patrol;
@@ -121,12 +114,11 @@ public class DummyAI : MonoBehaviour
 
                 if (cooldown <= 0f)
                 {
-                    int dmg = playerScript.isBlocking ? 2 : baseDamageToPlayer;
-                    playerScript.TakeDamage(dmg);
+                    animator.SetTrigger("attack");
                     cooldown = attackCooldown;
                 }
 
-                if (distance > stopDistance)
+                if (distance > stopDistance + 0.2f)
                 {
                     cooldown = attackCooldown;
                     agent.isStopped = false;
@@ -140,7 +132,6 @@ public class DummyAI : MonoBehaviour
     {
         Vector3 direction = (player.position - transform.position).normalized;
         direction.y = 0f;
-
         if (direction != Vector3.zero)
         {
             Quaternion lookRotation = Quaternion.LookRotation(direction);
@@ -182,6 +173,38 @@ public class DummyAI : MonoBehaviour
         }
         return false;
     }
+
+    public void PlaySwordSwingSound()
+    {
+        if (swordSwingSFX != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(swordSwingSFX);
+        }
+    }
+
+    public void StartAttack()
+    {
+        if (swordCollision != null)
+        {
+            swordCollision.EnableSwordCollider();
+            Debug.Log("Enemy attack started — damage enabled.");
+        }
+    }
+
+    public void EndAttack()
+    {
+        if (swordCollision != null)
+        {
+            swordCollision.DisableSwordCollider();
+            Debug.Log("Enemy attack ended — damage disabled.");
+        }
+    }
+
+    public void DisableSwordHitbox() => swordCollision?.DisableSwordCollider();
+
+    public void EnableSwordHitbox() => swordCollision?.EnableSwordCollider();
+
+    public void ResetSwordHit() => swordCollision?.ResetHit();
 
 #if UNITY_EDITOR
     private void OnDrawGizmos()
