@@ -8,9 +8,10 @@ public class DummyAI : MonoBehaviour
     public Transform player;
 
     [Header("Movement / Combat")]
+    [SerializeField] private float speed = 5f;
     [SerializeField] private float stopDistance = 2f;
     [SerializeField] private int baseDamageToPlayer = 5;
-    [SerializeField] private float attackCooldown = 5f;
+    [SerializeField] private float attackCooldown = 3f;
     [SerializeField] private AudioClip swordSwingSFX;
     [SerializeField] private SwordCollision swordCollision;
 
@@ -39,18 +40,24 @@ public class DummyAI : MonoBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
         patrol = GetComponent<EnemyPathing>();
-        animator = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
+
+        if (TryGetComponent(out Animator anim))
+            animator = anim;
+        else
+            Debug.LogWarning("DummyAI: No Animator component found.");
 
         if (swordCollision == null)
             swordCollision = GetComponentInChildren<SwordCollision>();
 
         CachePlayerReference();
+
+        agent.speed = speed;
     }
 
     private void Start()
     {
-        cooldown = attackCooldown;
+        cooldown = 0f; // Start attack immediately if close enough
     }
 
     private void Update()
@@ -65,6 +72,8 @@ public class DummyAI : MonoBehaviour
         switch (state)
         {
             case AIState.Patrol:
+                if (animator != null) animator.SetFloat("speed", 0f);
+
                 if (inSight)
                 {
                     patrol.StopPatrol();
@@ -87,17 +96,25 @@ public class DummyAI : MonoBehaviour
                     }
 
                     lostTimer = LOST_SIGHT_GRACE;
-
                     RotateTowardPlayer();
 
-                    if (distance <= stopDistance + 0.1f)
+                    if (animator != null)
+                        animator.SetFloat("speed", agent.velocity.magnitude);
+
+                    if (distance <= stopDistance)
                     {
+                        agent.isStopped = true;
                         state = AIState.Attack;
+                        cooldown = 0f; // Allow immediate first attack
                     }
                 }
                 else
                 {
                     lostTimer -= Time.deltaTime;
+
+                    if (animator != null)
+                        animator.SetFloat("speed", agent.velocity.magnitude);
+
                     if (lostTimer <= 0f)
                     {
                         patrol.StartPatrol();
@@ -107,23 +124,24 @@ public class DummyAI : MonoBehaviour
                 break;
 
             case AIState.Attack:
-                agent.isStopped = true;
-                cooldown -= Time.deltaTime;
-
                 RotateTowardPlayer();
+                if (animator != null) animator.SetFloat("speed", 0f);
+
+                cooldown -= Time.deltaTime;
 
                 if (cooldown <= 0f)
                 {
-                    animator.SetTrigger("attack");
+                    if (animator != null) animator.SetTrigger("attack");
                     cooldown = attackCooldown;
                 }
 
-                if (distance > stopDistance + 0.2f)
+                // Only leave attack state if player really moves away
+                if (distance > stopDistance + 0.5f)
                 {
-                    cooldown = attackCooldown;
                     agent.isStopped = false;
                     state = AIState.Chase;
                 }
+
                 break;
         }
     }
@@ -184,20 +202,14 @@ public class DummyAI : MonoBehaviour
 
     public void StartAttack()
     {
-        if (swordCollision != null)
-        {
-            swordCollision.EnableSwordCollider();
-            Debug.Log("Enemy attack started — damage enabled.");
-        }
+        swordCollision?.EnableSwordCollider();
+        Debug.Log("Enemy attack started — damage enabled.");
     }
 
     public void EndAttack()
     {
-        if (swordCollision != null)
-        {
-            swordCollision.DisableSwordCollider();
-            Debug.Log("Enemy attack ended — damage disabled.");
-        }
+        swordCollision?.DisableSwordCollider();
+        Debug.Log("Enemy attack ended — damage disabled.");
     }
 
     public void DisableSwordHitbox() => swordCollision?.DisableSwordCollider();
