@@ -7,6 +7,7 @@ public class PlayerHealth : MonoBehaviour, IHealth
 {
     [Header("Optional")]
     [SerializeField] private HealthBar healthBar;
+    [SerializeField] private DeathManager deathManager;
     [SerializeField] private int maxHealth = 100;
     private int currentHealth;
 
@@ -21,6 +22,7 @@ public class PlayerHealth : MonoBehaviour, IHealth
     {
         currentHealth = maxHealth;
         healthBar.setHealth(currentHealth, maxHealth);
+
     }
     
     private void Update()
@@ -50,6 +52,7 @@ public class PlayerHealth : MonoBehaviour, IHealth
     private void Die()
     {
         Debug.Log("Player is dead!");
+        deathManager.ShowGameOver();
         // Add death animation, respawn logic, etc.
     }
 }

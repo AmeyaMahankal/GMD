@@ -8,6 +8,7 @@ public class SwordCollision : MonoBehaviour
     private bool hasHit;
 
     private PlayerScript playerOwner;
+    private PlayerHealth playerHealth;
     private PlayerCombat combat;
     private DummyAI dummyOwner;
 
@@ -18,8 +19,9 @@ public class SwordCollision : MonoBehaviour
 
         playerOwner = GetComponentInParent<PlayerScript>();
         dummyOwner = GetComponentInParent<DummyAI>();
+        playerHealth = GetComponentInParent<PlayerHealth>();
     }
-
+ 
     private void OnTriggerStay(Collider other)
     {
         if (playerOwner != null && combat.IsAttacking && !hasHit)
