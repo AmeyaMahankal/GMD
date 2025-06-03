@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 
 public class StealthKill : MonoBehaviour
 {
@@ -38,7 +39,7 @@ public class StealthKill : MonoBehaviour
         float dotProduct = Vector3.Dot(closestEnemy.transform.forward, toPlayer);
         float requiredDot = Mathf.Cos(killAngle * Mathf.Deg2Rad);
 
-        if (dotProduct > requiredDot)  // Ensures the player is behind enemy
+        if (dotProduct < -requiredDot)  // Ensures the player is behind enemy
         {
             PerformStealthKill(closestEnemy);
         }
@@ -51,12 +52,19 @@ public class StealthKill : MonoBehaviour
         if (enemyAnimator)
         {
             enemyAnimator.SetTrigger("Die");
+        }
 
+        NavMeshAgent enemyAgent = enemy.GetComponent<NavMeshAgent>();
+        if (enemyAgent != null && enemyAgent.isActiveAndEnabled)
+        {
+            enemyAgent.enabled = false; 
         }
 
         Destroy(enemy, 4f);
-
     }
+
+
+
 
 
 }

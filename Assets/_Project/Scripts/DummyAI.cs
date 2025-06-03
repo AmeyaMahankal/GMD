@@ -1,112 +1,251 @@
 using UnityEngine;
+using UnityEngine.AI;
 
+[RequireComponent(typeof(NavMeshAgent), typeof(EnemyPathing))]
 public class DummyAI : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 2f;
-    [SerializeField] private float stopDistance = 1.5f;
+    [Header("References")]
+    public Transform player;
+
+    [Header("Movement / Combat")]
+    [SerializeField] private float speed = 5f;
+    [SerializeField] private float stopDistance = 2f;
     [SerializeField] private int baseDamageToPlayer = 5;
+    [SerializeField] private float attackCooldown = 3f;
+    [SerializeField] private AudioClip swordSwingSFX;
+    [SerializeField] private SwordCollision swordCollision;
+
+    [Header("Detection")]
     [SerializeField] private float detectionRange = 15f;
+    [SerializeField] private float fovAngle = 45f;
 
-    [Header("Vision Cone Settings")]
-    [SerializeField] private float fovAngle = 90f; // 180° full cone = 90° to each side
-
-    [Header("Stealth Kill Gizmo Settings")]
+    [Header("Stealth-Kill")]
     [SerializeField] private float killDistance = 2f;
     [SerializeField] private float killAngle = 45f;
 
-    private float attackCooldown = 5f;
-    private float currentCooldown;
+    private enum AIState { Patrol, Chase, Attack }
+    private AIState state = AIState.Patrol;
 
-    private PlayerScript player;
-    private bool playerDetected = false;
+    private NavMeshAgent agent;
+    private EnemyPathing patrol;
+    private PlayerScript playerScript;
+    private Animator animator;
+    private AudioSource audioSource;
+
+    private float cooldown;
+    private float lostTimer;
+    private const float LOST_SIGHT_GRACE = 3f;
+
+    private void Awake()
+    {
+        agent = GetComponent<NavMeshAgent>();
+        patrol = GetComponent<EnemyPathing>();
+        audioSource = GetComponent<AudioSource>();
+
+        if (TryGetComponent(out Animator anim))
+            animator = anim;
+        else
+            Debug.LogWarning("DummyAI: No Animator component found.");
+
+        if (swordCollision == null)
+            swordCollision = GetComponentInChildren<SwordCollision>();
+
+        CachePlayerReference();
+
+        agent.speed = speed;
+    }
 
     private void Start()
     {
-        player = FindObjectOfType<PlayerScript>();
-        currentCooldown = attackCooldown;
+        cooldown = 0f; // Start attack immediately if close enough
     }
 
     private void Update()
     {
-        if (player == null || player.IsStealthed) return;
+        if (playerScript == null) return;
 
-        float distanceToPlayer = Vector3.Distance(transform.position, player.transform.position);
+        float distance = Vector3.Distance(transform.position, player.position);
+        bool inSight = playerScript.IsStealthed
+            ? distance <= detectionRange && InFOV(transform, player, fovAngle, detectionRange)
+            : distance <= detectionRange;
 
-        // Detect player only if within range AND inside FOV
-        if (distanceToPlayer <= detectionRange && IsPlayerInFOV())
+        switch (state)
         {
-            playerDetected = true;
+            case AIState.Patrol:
+                if (animator != null) animator.SetFloat("speed", 0f);
+
+                if (inSight)
+                {
+                    patrol.StopPatrol();
+                    agent.isStopped = false;
+                    state = AIState.Chase;
+                }
+                break;
+
+            case AIState.Chase:
+                if (inSight)
+                {
+                    agent.isStopped = false;
+
+                    Vector3 dir = (player.position - transform.position).normalized;
+                    Vector3 targetPos = player.position - dir * stopDistance;
+
+                    if (NavMesh.SamplePosition(targetPos, out NavMeshHit hit, 1.0f, NavMesh.AllAreas))
+                    {
+                        agent.SetDestination(hit.position);
+                    }
+
+                    lostTimer = LOST_SIGHT_GRACE;
+                    RotateTowardPlayer();
+
+                    if (animator != null)
+                        animator.SetFloat("speed", agent.velocity.magnitude);
+
+                    if (distance <= stopDistance)
+                    {
+                        agent.isStopped = true;
+                        state = AIState.Attack;
+                        cooldown = 0f; // Allow immediate first attack
+                    }
+                }
+                else
+                {
+                    lostTimer -= Time.deltaTime;
+
+                    if (animator != null)
+                        animator.SetFloat("speed", agent.velocity.magnitude);
+
+                    if (lostTimer <= 0f)
+                    {
+                        patrol.StartPatrol();
+                        state = AIState.Patrol;
+                    }
+                }
+                break;
+
+            case AIState.Attack:
+                RotateTowardPlayer();
+                if (animator != null) animator.SetFloat("speed", 0f);
+
+                cooldown -= Time.deltaTime;
+
+                if (cooldown <= 0f)
+                {
+                    if (animator != null) animator.SetTrigger("attack");
+                    cooldown = attackCooldown;
+                }
+
+                // Only leave attack state if player really moves away
+                if (distance > stopDistance + 0.5f)
+                {
+                    agent.isStopped = false;
+                    state = AIState.Chase;
+                }
+
+                break;
         }
+    }
+
+    private void RotateTowardPlayer()
+    {
+        Vector3 direction = (player.position - transform.position).normalized;
+        direction.y = 0f;
+        if (direction != Vector3.zero)
+        {
+            Quaternion lookRotation = Quaternion.LookRotation(direction);
+            transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 10f);
+        }
+    }
+
+    private void CachePlayerReference()
+    {
+        if (player != null)
+            playerScript = player.GetComponent<PlayerScript>();
         else
         {
-            playerDetected = false;
-            return;
+            playerScript = FindObjectOfType<PlayerScript>();
+            if (playerScript != null)
+                player = playerScript.transform;
         }
+    }
 
-        if (distanceToPlayer > stopDistance)
-        {
-            MoveTowardsPlayer();
-        }
-        else
-        {
-            StopMoving();
-            currentCooldown -= Time.deltaTime;
+    public static bool InFOV(Transform origin, Transform target, float maxAngle, float maxRadius)
+    {
+        Collider[] overlaps = new Collider[10];
+        int count = Physics.OverlapSphereNonAlloc(origin.position, maxRadius, overlaps);
 
-            if (currentCooldown <= 0f)
+        for (int i = 0; i < count; i++)
+        {
+            if (overlaps[i] && overlaps[i].transform == target)
             {
-                int damage = player.isBlocking ? 2 : baseDamageToPlayer;
-                player.TakeDamage(damage);
-                Debug.Log($"Dummy attacked Player for {damage} damage. Next attack in 5 seconds.");
-                currentCooldown = attackCooldown;
+                Vector3 dir = (target.position - origin.position).normalized;
+                dir.y = 0;
+
+                if (Vector3.Angle(origin.forward, dir) > maxAngle) continue;
+
+                if (Physics.Raycast(origin.position, target.position - origin.position,
+                                    out RaycastHit hit, maxRadius) &&
+                    hit.transform == target)
+                    return true;
             }
         }
+        return false;
     }
 
-    private bool IsPlayerInFOV()
+    public void PlaySwordSwingSound()
     {
-        Vector3 directionToPlayer = (player.transform.position - transform.position).normalized;
-        directionToPlayer.y = 0;
-
-        float angle = Vector3.Angle(transform.forward, directionToPlayer);
-        return angle <= fovAngle;
+        if (swordSwingSFX != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(swordSwingSFX);
+        }
     }
 
-    private void MoveTowardsPlayer()
+    public void StartAttack()
     {
-        Vector3 targetPos = new Vector3(player.transform.position.x, transform.position.y, player.transform.position.z);
-        transform.LookAt(targetPos);
-
-        Vector3 direction = (player.transform.position - transform.position).normalized;
-        transform.Translate(direction * moveSpeed * Time.deltaTime, Space.World);
+        swordCollision?.EnableSwordCollider();
+        Debug.Log("Enemy attack started — damage enabled.");
     }
 
-    private void StopMoving() { }
+    public void EndAttack()
+    {
+        swordCollision?.DisableSwordCollider();
+        Debug.Log("Enemy attack ended — damage disabled.");
+    }
 
+    public void DisableSwordHitbox() => swordCollision?.DisableSwordCollider();
+
+    public void EnableSwordHitbox() => swordCollision?.EnableSwordCollider();
+
+    public void ResetSwordHit() => swordCollision?.ResetHit();
+
+#if UNITY_EDITOR
     private void OnDrawGizmos()
     {
-        // Draw vision cone in scene view
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, detectionRange);
 
-        Vector3 leftBoundary = Quaternion.Euler(0, -fovAngle, 0) * transform.forward * detectionRange;
-        Vector3 rightBoundary = Quaternion.Euler(0, fovAngle, 0) * transform.forward * detectionRange;
-
+        Vector3 left = Quaternion.AngleAxis(fovAngle, transform.up) * transform.forward * detectionRange;
+        Vector3 right = Quaternion.AngleAxis(-fovAngle, transform.up) * transform.forward * detectionRange;
         Gizmos.color = Color.cyan;
-        Gizmos.DrawRay(transform.position, leftBoundary);
-        Gizmos.DrawRay(transform.position, rightBoundary);
+        Gizmos.DrawRay(transform.position, left);
+        Gizmos.DrawRay(transform.position, right);
 
-        // Stealth kill cone
+        if (player != null)
+        {
+            bool inside = InFOV(transform, player, fovAngle, detectionRange);
+            Gizmos.color = inside ? Color.green : Color.red;
+            Gizmos.DrawRay(transform.position,
+                           (player.position - transform.position).normalized * detectionRange);
+        }
+
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, killDistance);
 
-        Quaternion leftKill = Quaternion.Euler(0, killAngle + 90, 0);
-        Quaternion rightKill = Quaternion.Euler(0, -killAngle - 90, 0);
-
-        Vector3 leftDir = leftKill * -transform.forward * killDistance;
-        Vector3 rightDir = rightKill * -transform.forward * killDistance;
-
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawLine(transform.position, transform.position + leftDir);
-        Gizmos.DrawLine(transform.position, transform.position + rightDir);
+        Vector3 killL = Quaternion.AngleAxis(killAngle, transform.up) * -transform.forward * killDistance;
+        Vector3 killR = Quaternion.AngleAxis(-killAngle, transform.up) * -transform.forward * killDistance;
+        Gizmos.color = new Color(1f, 0f, 1f);
+        Gizmos.DrawRay(transform.position, killL);
+        Gizmos.DrawRay(transform.position, killR);
     }
+#endif
 }

@@ -23,6 +23,7 @@ public class PlayerScript : MonoBehaviour
 
     [Header("Attack Settings")]
     public bool isAttacking = false;
+    [SerializeField] private SwordCollision swordCollision;
 
     [Header("Block Settings")]
     public bool isBlocking = false;
@@ -34,11 +35,19 @@ public class PlayerScript : MonoBehaviour
     [SerializeField] private float killDistance = 2f;
     [SerializeField] private float killAngle = 45f;
 
+    [Header("Audio")]
+    [SerializeField] private AudioClip swordSwingSFX;
+    private AudioSource audioSource;
+
     public bool IsStealthed => isStealthed;
 
     private void Awake()
     {
         animator = GetComponent<Animator>();
+        audioSource = GetComponent<AudioSource>();
+
+        if (swordCollision == null)
+            swordCollision = GetComponentInChildren<SwordCollision>();
     }
 
     private void Start()
@@ -102,16 +111,19 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
-    public void OnB() => UpdateInputIndicator("B");
-
-    public void OnX()
+    public void OnB()
     {
         isCrouched = !isCrouched;
         isStealthed = isCrouched;
-        UpdateInputIndicator("X");
+        UpdateInputIndicator("B");
         UpdateCrouchIndicator();
 
         Debug.Log(isStealthed ? "Player entered STEALTH mode!" : "Player exited STEALTH mode!");
+    }
+
+    public void OnX()
+    {
+        UpdateInputIndicator("X");
     }
 
     public void OnY() => UpdateInputIndicator("Y");
@@ -151,13 +163,42 @@ public class PlayerScript : MonoBehaviour
     private void PerformAttack()
     {
         animator.SetTrigger("attack");
+    }
+
+    // Animation Event: Call this during the swing animation
+    public void PlaySwordSwingSound()
+    {
+        if (swordSwingSFX != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(swordSwingSFX);
+        }
+    }
+
+    public void StartAttack()
+    {
         isAttacking = true;
+        Debug.Log("Attack started — can now deal damage.");
     }
 
     public void EndAttack()
     {
         isAttacking = false;
-        Debug.Log("Attack ended.");
+        Debug.Log("Attack ended — damage disabled.");
+    }
+
+    public void EnableSwordHitbox()
+    {
+        swordCollision?.EnableSwordCollider();
+    }
+
+    public void DisableSwordHitbox()
+    {
+        swordCollision?.DisableSwordCollider();
+    }
+
+    public void ResetSwordHit()
+    {
+        swordCollision?.ResetHit();
     }
 
     public void TakeDamage(int damage)

@@ -816,9 +816,6 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6aa6efc94becff14883739bb794c1e32, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1906822418172511662}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6aa6efc94becff14883739bb794c1e32, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 9096500976521976267}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6aa6efc94becff14883739bb794c1e32, type: 3}
       insertIndex: -1
@@ -835,28 +832,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 6aa6efc94becff14883739bb794c1e32, type: 3}
   m_PrefabInstance: {fileID: 2874066620301643511}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1906822418172511662
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3108562969381712806}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 65574d7a338b92d4a806bc2a396a85e7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  speed: 5
-  inputIndicator: {fileID: 0}
-  crouchedIndicator: {fileID: 0}
-  jumpHeight: 5
-  gravity: 9.81
-  isAttacking: 0
-  isBlocking: 0
-  playerHealth: 100
-  killDistance: 2
-  killAngle: 45
 --- !u!95 &9096500976521976267
 Animator:
   serializedVersion: 7
