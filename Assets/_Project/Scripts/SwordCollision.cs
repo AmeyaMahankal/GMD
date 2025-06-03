@@ -8,6 +8,7 @@ public class SwordCollision : MonoBehaviour
     private bool hasHit;
 
     private PlayerScript playerOwner;
+    private PlayerCombat combat;
     private DummyAI dummyOwner;
 
     private void Start()
@@ -21,7 +22,7 @@ public class SwordCollision : MonoBehaviour
 
     private void OnTriggerStay(Collider other)
     {
-        if (playerOwner != null && playerOwner.isAttacking && !hasHit)
+        if (playerOwner != null && combat.IsAttacking && !hasHit)
         {
             DummyHealth dummy = other.GetComponent<DummyHealth>() ?? other.GetComponentInParent<DummyHealth>();
             if (dummy != null)
@@ -30,23 +31,14 @@ public class SwordCollision : MonoBehaviour
                 hasHit = true;
             }
         }
-        else if (dummyOwner != null && !hasHit)
-        {
-            PlayerScript player = other.GetComponent<PlayerScript>() ?? other.GetComponentInParent<PlayerScript>();
-            if (player != null)
-            {
-                int damage = player.isBlocking ? 2 : swordDamage;
-                player.TakeDamage(damage);
-                hasHit = true;
-            }
-        }
+     
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (playerOwner != null)
+        if (combat != null)
         {
-            if (playerOwner.isAttacking && !hasHit)
+            if (combat.IsAttacking && !hasHit)
             {
                 DummyHealth dummy = other.GetComponent<DummyHealth>() ?? other.GetComponentInParent<DummyHealth>();
                 if (dummy != null)
@@ -56,16 +48,7 @@ public class SwordCollision : MonoBehaviour
                 }
             }
         }
-        else if (dummyOwner != null && !hasHit)
-        {
-            PlayerScript player = other.GetComponent<PlayerScript>() ?? other.GetComponentInParent<PlayerScript>();
-            if (player != null)
-            {
-                int damage = player.isBlocking ? 2 : swordDamage;
-                player.TakeDamage(damage);
-                hasHit = true;
-            }
-        }
+       
     }
 
     public void EnableSwordCollider()

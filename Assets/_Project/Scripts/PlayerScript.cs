@@ -11,6 +11,7 @@ public class PlayerScript : MonoBehaviour
     private bool isStealthed = false;
     private Animator animator;
     private static readonly int IsCrouchingHash = Animator.StringToHash("IsCrouching");
+    private PlayerCombat playerCombat;
 
     [SerializeField] private float speed = 5;
     [SerializeField] public TextMeshProUGUI inputIndicator;
@@ -22,13 +23,6 @@ public class PlayerScript : MonoBehaviour
     private float verticalVelocity = 0f;
     private bool isJumping = false;
 
-    [Header("Attack Settings")]
-    public bool isAttacking = false;
-    [SerializeField] private SwordCollision swordCollision;
-
-    [Header("Block Settings")]
-    public bool isBlocking = false;
-
     [Header("Player Health")]
     [SerializeField] private int playerHealth = 100;
 
@@ -36,19 +30,12 @@ public class PlayerScript : MonoBehaviour
     [SerializeField] private float killDistance = 2f;
     [SerializeField] private float killAngle = 45f;
 
-    [Header("Audio")]
-    [SerializeField] private AudioClip swordSwingSFX;
-    private AudioSource audioSource;
-
     public bool IsStealthed => isStealthed;
 
     private void Awake()
     {
         animator = GetComponent<Animator>();
-        audioSource = GetComponent<AudioSource>();
-
-        if (swordCollision == null)
-            swordCollision = GetComponentInChildren<SwordCollision>();
+        playerCombat = GetComponent<PlayerCombat>();
     }
 
     private void Start()
@@ -102,11 +89,11 @@ public class PlayerScript : MonoBehaviour
     public void OnA()
     {
         UpdateInputIndicator("A");
-        
+
         if (isCrouched)
         {
             Debug.Log("Cannot jump while crouched.");
-            return; // Do nothing if crouched
+            return;
         }
 
         if (!isJumping)
@@ -139,9 +126,9 @@ public class PlayerScript : MonoBehaviour
     public void OnLeftTrigger()
     {
         UpdateInputIndicator("L Trigger");
-        isBlocking = !isBlocking;
 
-        Debug.Log(isBlocking ? "Player started blocking!" : "Player stopped blocking!");
+        if (playerCombat != null)
+            playerCombat.ToggleBlock();
     }
 
     public void OnRightTrigger()
@@ -152,11 +139,12 @@ public class PlayerScript : MonoBehaviour
         {
             TryStealthKill();
         }
-        else
+        else if (playerCombat != null)
         {
-            PerformAttack();
+            playerCombat.PerformAttack();
         }
     }
+
 
     public void OnStart() => UpdateInputIndicator("Start");
 
@@ -167,47 +155,6 @@ public class PlayerScript : MonoBehaviour
     }
 
     private void UpdateInputIndicator(string input) => inputIndicator.text = input;
-
-    private void PerformAttack()
-    {
-        animator.SetTrigger("attack");
-    }
-
-    // Animation Event: Call this during the swing animation
-    public void PlaySwordSwingSound()
-    {
-        if (swordSwingSFX != null && audioSource != null)
-        {
-            audioSource.PlayOneShot(swordSwingSFX);
-        }
-    }
-
-    public void StartAttack()
-    {
-        isAttacking = true;
-        Debug.Log("Attack started — can now deal damage.");
-    }
-
-    public void EndAttack()
-    {
-        isAttacking = false;
-        Debug.Log("Attack ended — damage disabled.");
-    }
-
-    public void EnableSwordHitbox()
-    {
-        swordCollision?.EnableSwordCollider();
-    }
-
-    public void DisableSwordHitbox()
-    {
-        swordCollision?.DisableSwordCollider();
-    }
-
-    public void ResetSwordHit()
-    {
-        swordCollision?.ResetHit();
-    }
 
     public void TakeDamage(int damage)
     {

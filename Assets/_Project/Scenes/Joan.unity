@@ -555,13 +555,25 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1547723940528720162, guid: f2b06563b95afc94ea5b9ffa1fc75813, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5615478856202866655, guid: f2b06563b95afc94ea5b9ffa1fc75813, type: 3}
       propertyPath: path
       value: 
       objectReference: {fileID: 1283192756}
+    - target: {fileID: 5615478856202866655, guid: f2b06563b95afc94ea5b9ffa1fc75813, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7007896485339148277, guid: f2b06563b95afc94ea5b9ffa1fc75813, type: 3}
       propertyPath: m_Name
       value: Zombie (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 7007896485339148277, guid: f2b06563b95afc94ea5b9ffa1fc75813, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7641161703994520911, guid: f2b06563b95afc94ea5b9ffa1fc75813, type: 3}
       propertyPath: m_LocalPosition.x
@@ -630,13 +642,9 @@ MonoBehaviour:
   crouchedIndicator: {fileID: 1133416679}
   jumpHeight: 5
   gravity: 9.81
-  isAttacking: 0
-  swordCollision: {fileID: 1244838320}
-  isBlocking: 0
   playerHealth: 100
   killDistance: 2
   killAngle: 45
-  swordSwingSFX: {fileID: 8300000, guid: 9952b242c79472a4fba493d511e30068, type: 3}
 --- !u!4 &700597809 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2335122043489380636, guid: 1134531a85b149e4d85725dd250b7359, type: 3}
@@ -744,6 +752,20 @@ BoxCollider:
   m_CorrespondingSourceObject: {fileID: 8182473330041420703, guid: 1134531a85b149e4d85725dd250b7359, type: 3}
   m_PrefabInstance: {fileID: 986224014}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &700597816
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 700597801}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ce19e37b1770224892844f2d9a6ee77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SwordCollisionScript: {fileID: 0}
+  swordSwingSFX: {fileID: 8300000, guid: 9952b242c79472a4fba493d511e30068, type: 3}
 --- !u!1001 &731657791
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1420,6 +1442,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 2.3520043
       objectReference: {fileID: 0}
+    - target: {fileID: 6929653316464256454, guid: 1134531a85b149e4d85725dd250b7359, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7016541645064177077, guid: 1134531a85b149e4d85725dd250b7359, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 62.04366
@@ -1660,7 +1686,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 8.691083
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 6929653316464256454, guid: 1134531a85b149e4d85725dd250b7359, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
@@ -1670,6 +1697,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3108562969381712806, guid: 1134531a85b149e4d85725dd250b7359, type: 3}
       insertIndex: -1
       addedObject: {fileID: 700597810}
+    - targetCorrespondingSourceObject: {fileID: 3108562969381712806, guid: 1134531a85b149e4d85725dd250b7359, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 700597816}
   m_SourcePrefab: {fileID: 100100000, guid: 1134531a85b149e4d85725dd250b7359, type: 3}
 --- !u!114 &1133416679 stripped
 MonoBehaviour:
@@ -1892,17 +1922,6 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f553a0919f5182478a5adf8f7f23f70, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &1244838320 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6929653316464256454, guid: 1134531a85b149e4d85725dd250b7359, type: 3}
-  m_PrefabInstance: {fileID: 986224014}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6b41ecaabcc0f164d9d0ba270775704d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1001 &1260777199
@@ -2163,6 +2182,46 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1869131864 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7007896485339148277, guid: f2b06563b95afc94ea5b9ffa1fc75813, type: 3}
+  m_PrefabInstance: {fileID: 1578445852361823540}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1869131874
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1869131864}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ce19e37b1770224892844f2d9a6ee77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SwordCollisionScript: {fileID: 0}
+  swordSwingSFX: {fileID: 0}
+--- !u!1 &2026682974 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4430295824255803530, guid: f2b06563b95afc94ea5b9ffa1fc75813, type: 3}
+  m_PrefabInstance: {fileID: 1578445852361823540}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2026682978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2026682974}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b54b8cc04c464af4a2982c9f6753fe3c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  swordDamage: 10
+  swordCollider: {fileID: 0}
+  hasHit: 0
+  ownerCombatant: {fileID: 0}
 --- !u!1001 &1578445852361823540
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2179,13 +2238,25 @@ PrefabInstance:
       propertyPath: fovAngle
       value: 15
       objectReference: {fileID: 0}
+    - target: {fileID: 1547723940528720162, guid: f2b06563b95afc94ea5b9ffa1fc75813, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5615478856202866655, guid: f2b06563b95afc94ea5b9ffa1fc75813, type: 3}
       propertyPath: path
       value: 
       objectReference: {fileID: 1232333362}
+    - target: {fileID: 5615478856202866655, guid: f2b06563b95afc94ea5b9ffa1fc75813, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7007896485339148277, guid: f2b06563b95afc94ea5b9ffa1fc75813, type: 3}
       propertyPath: m_Name
       value: Zombie
+      objectReference: {fileID: 0}
+    - target: {fileID: 7007896485339148277, guid: f2b06563b95afc94ea5b9ffa1fc75813, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7641161703994520911, guid: f2b06563b95afc94ea5b9ffa1fc75813, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2228,13 +2299,23 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8678192983082430816, guid: f2b06563b95afc94ea5b9ffa1fc75813, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8678192983082430816, guid: f2b06563b95afc94ea5b9ffa1fc75813, type: 3}
       propertyPath: swordCollider
       value: 
       objectReference: {fileID: 700597812}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7007896485339148277, guid: f2b06563b95afc94ea5b9ffa1fc75813, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1869131874}
+    - targetCorrespondingSourceObject: {fileID: 4430295824255803530, guid: f2b06563b95afc94ea5b9ffa1fc75813, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2026682978}
   m_SourcePrefab: {fileID: 100100000, guid: f2b06563b95afc94ea5b9ffa1fc75813, type: 3}
 --- !u!1001 &3268411014005757697
 PrefabInstance:

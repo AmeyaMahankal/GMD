@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent), typeof(EnemyPathing))]
-public class DummyAI : MonoBehaviour
+public class DummyAI : MonoBehaviour 
 {
     [Header("References")]
     public Transform player;
