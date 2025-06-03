@@ -66,9 +66,5 @@ public class PlayerCombat : MonoBehaviour, ICombatant
             audioSource.PlayOneShot(swordSwingSFX);
         }
     }
-
-    public void TakeDamage(int amount)
-    {
-        GetComponent<PlayerScript>().TakeDamage(amount);
-    }
+    
 }

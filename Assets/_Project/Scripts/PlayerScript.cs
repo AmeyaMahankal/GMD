@@ -12,6 +12,7 @@ public class PlayerScript : MonoBehaviour
     private Animator animator;
     private static readonly int IsCrouchingHash = Animator.StringToHash("IsCrouching");
     private PlayerCombat playerCombat;
+    private PlayerHealth playerHealth;
 
     [SerializeField] private float speed = 5;
     [SerializeField] public TextMeshProUGUI inputIndicator;
@@ -23,8 +24,8 @@ public class PlayerScript : MonoBehaviour
     private float verticalVelocity = 0f;
     private bool isJumping = false;
 
-    [Header("Player Health")]
-    [SerializeField] private int playerHealth = 100;
+    [Header("Player Health")] 
+    //[SerializeField] private int playerHealth = 100;
 
     [Header("Stealth Kill Settings")]
     [SerializeField] private float killDistance = 2f;
@@ -155,16 +156,12 @@ public class PlayerScript : MonoBehaviour
     }
 
     private void UpdateInputIndicator(string input) => inputIndicator.text = input;
-
-    public void TakeDamage(int damage)
+    
+    public void TakeDamage(int amount)
     {
-        playerHealth -= damage;
-        Debug.Log($"Player took {damage} damage. Remaining Health = {playerHealth}");
-
-        if (playerHealth <= 0)
-            Debug.Log("Player is dead!");
+        GetComponent<PlayerHealth>().TakeDamage(amount);
     }
-
+    
     private void TryStealthKill()
     {
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");

@@ -3,7 +3,7 @@
     public interface ICombatant
     {
 
-        void TakeDamage(int amount);
+        //void TakeDamage(int amount);
     }
 
 }
