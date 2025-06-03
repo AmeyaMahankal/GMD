@@ -11,13 +11,17 @@ public class Player : MonoBehaviour
     private float movementX;
     private float movementY;
     private Animator animator;
+    private Rigidbody rb;
+
+
     
-
-
     [SerializeField] private float speed = 5;
     [SerializeField] public TextMeshProUGUI  inputIndicator;
-    [SerializeField] public TextMeshProUGUI  crouchedIndicator;
     [SerializeField] public TextMeshProUGUI  pickUpIndicator;
+    [SerializeField] private float crouchSpeedMultiplier = 0.5f;
+    
+    [SerializeField] public GameObject  crouchedIndicator;
+    [SerializeField] public GameObject  standingIndicator;
 
     private bool isCrouched = false;
     private bool IsInteractingWithContinuousCollectible = false;
@@ -29,19 +33,24 @@ public class Player : MonoBehaviour
 
     private void Awake() {
         animator = GetComponent<Animator>(); 
+        rb = GetComponent<Rigidbody>();
+
     }
-    private void Update()
+    private void FixedUpdate()
     {
         Vector3 movement = new Vector3(movementX, 0.0f, movementY);
-        animator.SetFloat("speed", movement.magnitude);
-        
+
+        float currentSpeed = isCrouched ? speed * crouchSpeedMultiplier : speed;
 
         if (movement.sqrMagnitude > 0.01f) {
-         transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.15f);
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.15f);
         }
 
-        transform.Translate(movement  * Time.deltaTime * speed, Space.World);
+        Vector3 newPosition = rb.position + movement.normalized * currentSpeed * Time.fixedDeltaTime;
+        animator.SetFloat("speed", currentSpeed);
+        rb.MovePosition(newPosition);
     }
+
 
     public void OnMovement(InputValue value)
     {
@@ -61,9 +70,9 @@ public class Player : MonoBehaviour
     {
         isCrouched = !isCrouched;
 
+        animator.SetBool(IsCrouchedHash, isCrouched);
         UpdateInputIndicator("B");
         UpdateCrouchIndicator();
-        animator.SetBool(IsCrouchedHash, isCrouched);
 
     }
 
@@ -112,11 +121,11 @@ public class Player : MonoBehaviour
 
     private void UpdateCrouchIndicator() {
         if(isCrouched) {
-            crouchedIndicator.text = "Crouched";
-            crouchedIndicator.color = Color.red;
+            crouchedIndicator.SetActive(true);
+            standingIndicator.SetActive(false);
         } else {
-            crouchedIndicator.text = "Not Crouched.";
-            crouchedIndicator.color = Color.green;
+            standingIndicator.SetActive(true);
+            crouchedIndicator.SetActive(false);
         }
     }
 

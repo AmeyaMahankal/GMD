@@ -10,27 +10,35 @@ public class PlayerScript : MonoBehaviour
     private float movementY;
     private bool isJumping = false;
     private float verticalVelocity = 0f;
-
+    private Rigidbody rb;
     private Animator animator;
     private PlayerCombat playerCombat;
 
     private IStealth playerStealth;
 
-    private static readonly int IsCrouchingHash = Animator.StringToHash("IsCrouching");
 
     [SerializeField] private float speed = 5f;
     [SerializeField] private float jumpHeight = 5f;
     [SerializeField] private float gravity = 9.81f;
 
+    private bool isCrouched = false;
+    private static readonly int IsCrouchedHash = Animator.StringToHash("IsCrouching");
 
     [SerializeField] public TextMeshProUGUI inputIndicator;
-    [SerializeField] public TextMeshProUGUI crouchedIndicator;
+    [SerializeField] public TextMeshProUGUI  pickUpIndicator;
+
+
+    [SerializeField] public GameObject  crouchedIndicator;
+    [SerializeField] public GameObject  standingIndicator;
+    private DroppedItem nearbyItem;
 
     private void Awake()
     {
         animator = GetComponent<Animator>();
         playerCombat = GetComponent<PlayerCombat>();
         playerStealth = GetComponent<IStealth>();
+        rb = GetComponent<Rigidbody>();
+
     }
 
     private void Start()
@@ -38,23 +46,22 @@ public class PlayerScript : MonoBehaviour
         animator.SetBool("isGrounded", true);
         animator.SetBool("isJumping", false);
     }
+    
+    private void FixedUpdate()
+    {
+        Vector3 movement = new Vector3(movementX, 0.0f, movementY);
+        animator.SetFloat("speed", movement.magnitude);
+
+        if (movement.sqrMagnitude > 0.01f) {
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.15f);
+        }
+
+        Vector3 newPosition = rb.position + movement.normalized * speed * Time.fixedDeltaTime;
+        rb.MovePosition(newPosition);
+    }
 
     private void Update()
     {
-        Vector3 movement = new Vector3(movementX, 0f, movementY);
-        animator.SetFloat("speed", movement.magnitude);
-
-        if (movement.sqrMagnitude > 0.01f)
-        {
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation,
-                Quaternion.LookRotation(movement),
-                0.15f
-            );
-        }
-
-        transform.Translate(movement * Time.deltaTime * speed, Space.World);
-
         if (isJumping)
         {
             verticalVelocity -= gravity * Time.deltaTime;
@@ -102,7 +109,10 @@ public class PlayerScript : MonoBehaviour
 
     public void OnB()
     {
+        isCrouched = !isCrouched;
+
         UpdateInputIndicator("B");
+        animator.SetBool(IsCrouchedHash, isCrouched);
         playerStealth?.ToggleStealth();
         UpdateCrouchIndicator();
     }
@@ -110,6 +120,16 @@ public class PlayerScript : MonoBehaviour
     public void OnX()
     {
         UpdateInputIndicator("X");
+        if (nearbyItem != null && !nearbyItem.pickedUp) {
+            PickupItem(nearbyItem);
+            pickUpIndicator.text = "";
+            nearbyItem = null;
+        }
+        
+        //opening a chest or a continous interctable. 
+        //IsInteractingWithContinuousCollectible = !IsInteractingWithContinuousCollectible;
+        //animator.SetBool(IsInteractingWithContinuousCollectibleHash, IsInteractingWithContinuousCollectible);
+        Debug.Log("X");
     }
 
     public void OnY()
@@ -142,11 +162,14 @@ public class PlayerScript : MonoBehaviour
         UpdateInputIndicator("Start");
     }
 
-    private void UpdateCrouchIndicator()
-    {
-        bool isCrouched = playerStealth?.IsStealthed == true;
-        crouchedIndicator.text = isCrouched ? "Crouched" : "Not Crouched.";
-        crouchedIndicator.color = isCrouched ? Color.red : Color.green;
+    private void UpdateCrouchIndicator() {
+        if(isCrouched) {
+            crouchedIndicator.SetActive(true);
+            standingIndicator.SetActive(false);
+        } else {
+            standingIndicator.SetActive(true);
+            crouchedIndicator.SetActive(false);
+        }
     }
 
 
@@ -156,6 +179,11 @@ public class PlayerScript : MonoBehaviour
 
     {
         GetComponent<PlayerHealth>().TakeDamage(amount);
+    }
+    private void PickupItem(DroppedItem item)
+    {
+        var inventoryManager = GetComponent<InventoryManager>();
+        inventoryManager.PickupDroppedItem(item);
     }
 
 }
