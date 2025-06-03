@@ -45,6 +45,7 @@ public class PlayerScript : MonoBehaviour
     {
         animator.SetBool("isGrounded", true);
         animator.SetBool("isJumping", false);
+        UpdateCrouchIndicator();
     }
     
     private void FixedUpdate()
@@ -183,7 +184,7 @@ public class PlayerScript : MonoBehaviour
     private void PickupItem(DroppedItem item)
     {
         var inventoryManager = GetComponent<InventoryManager>();
-        inventoryManager.PickupDroppedItem(item);
+        inventoryManager.AddItem(item.item);
     }
 
 }

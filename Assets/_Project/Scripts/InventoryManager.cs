@@ -16,52 +16,28 @@ public class InventoryManager : MonoBehaviour
 
    public void OnTriggerEnter(Collider other)
    {
-      /*if (other.CompareTag("DroppedItem"))
+      if (other.CompareTag("DroppedItem"))
       {
          var droppedItem = other.GetComponent<DroppedItem>();
          
          if (droppedItem.pickedUp) return;
-         var newItem = droppedItem.item;
-         var itemType = newItem.itemType;
-
-         if (inventory.ContainsKey(itemType))
-         {
-            DropItem(itemType);
-         }
          
          droppedItem.pickedUp = true;
          AddItem(droppedItem.item);
          Destroy(other.gameObject);
-      }*/
+      }
    }
 
    public void AddItem(Item item) {
       inventory.Add(item.itemType, item);
-      ui.AddUiItem(item.itemType, item);  
+      ui.AddUiItem(item.itemType, item);
    }
 
    public void DropItem(string itemType) {
-      Vector3 dropOffset = transform.forward + Vector3.up * 1.5f;
-      var droppedItem = Instantiate(droppedItemPrefab, transform.position + dropOffset, Quaternion.identity).GetComponent<DroppedItem>();
+      var droppedItem = Instantiate(droppedItemPrefab, transform.position, Quaternion.identity).GetComponent<DroppedItem>();
       var item = inventory.GetValueOrDefault(itemType);
       droppedItem.Initialize(item);
       inventory.Remove(itemType);
       ui.RemoveUiItem(item.itemType);
-   }
-   
-   public void PickupDroppedItem(DroppedItem droppedItem) {
-      var newItem = droppedItem.item;
-      var newItemType = newItem.itemType;
-
-
-      if (inventory.ContainsKey(newItemType))
-      {
-         DropItem(newItemType);
-      }
-      droppedItem.pickedUp = true;
-      AddItem(droppedItem.item);
-      Destroy(droppedItem.gameObject);
-      
-        
    }
 }

@@ -164,6 +164,5 @@ public class Player : MonoBehaviour
     private void PickupItem(DroppedItem item)
     {
         var inventoryManager = GetComponent<InventoryManager>();
-        inventoryManager.PickupDroppedItem(item);
     }
 }
