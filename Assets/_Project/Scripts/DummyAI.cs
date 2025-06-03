@@ -1,3 +1,4 @@
+using _Project.Scripts.PlayerScript.Interfaces;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -29,6 +30,7 @@ public class DummyAI : MonoBehaviour
     private NavMeshAgent agent;
     private EnemyPathing patrol;
     private PlayerScript playerScript;
+    private PlayerStealth stealth;
     private Animator animator;
     private AudioSource audioSource;
 
@@ -65,7 +67,7 @@ public class DummyAI : MonoBehaviour
         if (playerScript == null) return;
 
         float distance = Vector3.Distance(transform.position, player.position);
-        bool inSight = playerScript.IsStealthed
+        bool inSight = stealth.IsStealthed
             ? distance <= detectionRange && InFOV(transform, player, fovAngle, detectionRange)
             : distance <= detectionRange;
 
@@ -160,14 +162,21 @@ public class DummyAI : MonoBehaviour
     private void CachePlayerReference()
     {
         if (player != null)
+        {
             playerScript = player.GetComponent<PlayerScript>();
+            stealth = player.GetComponent<PlayerStealth>();
+        }
         else
         {
             playerScript = FindObjectOfType<PlayerScript>();
             if (playerScript != null)
+            {
                 player = playerScript.transform;
+                stealth = playerScript.GetComponent<PlayerStealth>();
+            }
         }
     }
+
 
     public static bool InFOV(Transform origin, Transform target, float maxAngle, float maxRadius)
     {
