@@ -1,8 +1,6 @@
 using _Project.Scripts.PlayerScript.Interfaces;
 using UnityEngine;
 
-using UnityEngine;
-
 public class PlayerHealth : MonoBehaviour, IHealth
 {
     [Header("Optional")]
@@ -14,9 +12,6 @@ public class PlayerHealth : MonoBehaviour, IHealth
     public bool IsDead => currentHealth <= 0;
     public int MaxHealth => maxHealth;
     public int CurrentHealth => currentHealth;
-    
-    private float damageTimer = 0f;
-    private float damageInterval = 1f; // 1 second
 
     private void Awake()
     {
@@ -24,26 +19,18 @@ public class PlayerHealth : MonoBehaviour, IHealth
         healthBar.setHealth(currentHealth, maxHealth);
 
     }
-    
+
+    // Removed automatic damage
     private void Update()
     {
         if (IsDead) return;
-
-        damageTimer += Time.deltaTime;
-
-        if (damageTimer >= damageInterval)
-        {
-            TakeDamage(2);
-            damageTimer = 0f;
-        }
     }
 
     public void TakeDamage(int amount)
     {
         currentHealth -= amount;
-       Debug.Log($"Player took {amount} damage. Remaining Health = {currentHealth}");
+        Debug.Log($"Player took {amount} damage. Remaining Health = {currentHealth}");
         healthBar.setHealth(currentHealth, maxHealth);
-        
 
         if (IsDead)
             Die();
@@ -56,5 +43,3 @@ public class PlayerHealth : MonoBehaviour, IHealth
         // Add death animation, respawn logic, etc.
     }
 }
-
-

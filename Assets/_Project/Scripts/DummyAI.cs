@@ -14,7 +14,7 @@ public class DummyAI : MonoBehaviour
     [SerializeField] private int baseDamageToPlayer = 5;
     [SerializeField] private float attackCooldown = 3f;
     [SerializeField] private AudioClip swordSwingSFX;
-    [SerializeField] private SwordCollision swordCollision;
+    // Removed: [SerializeField] private SwordCollision swordCollision;
 
     [Header("Detection")]
     [SerializeField] private float detectionRange = 15f;
@@ -37,6 +37,7 @@ public class DummyAI : MonoBehaviour
     private float cooldown;
     private float lostTimer;
     private const float LOST_SIGHT_GRACE = 3f;
+    public bool IsAttacking { get; set; }
 
     private void Awake()
     {
@@ -49,11 +50,9 @@ public class DummyAI : MonoBehaviour
         else
             Debug.LogWarning("DummyAI: No Animator component found.");
 
-        if (swordCollision == null)
-            swordCollision = GetComponentInChildren<SwordCollision>();
+        // Removed swordCollision initialization
 
         CachePlayerReference();
-
         agent.speed = speed;
     }
 
@@ -137,7 +136,6 @@ public class DummyAI : MonoBehaviour
                     cooldown = attackCooldown;
                 }
 
-                // Only leave attack state if player really moves away
                 if (distance > stopDistance + 0.5f)
                 {
                     agent.isStopped = false;
@@ -177,7 +175,6 @@ public class DummyAI : MonoBehaviour
         }
     }
 
-
     public static bool InFOV(Transform origin, Transform target, float maxAngle, float maxRadius)
     {
         Collider[] overlaps = new Collider[10];
@@ -211,21 +208,33 @@ public class DummyAI : MonoBehaviour
 
     public void StartAttack()
     {
-        swordCollision?.EnableSwordCollider();
-        Debug.Log("Enemy attack started — damage enabled.");
+        Debug.Log("Enemy attack started — attempting to deal damage.");
+
+        if (player != null && Vector3.Distance(transform.position, player.position) <= stopDistance + 0.25f)
+        {
+            PlayerScript target = player.GetComponent<PlayerScript>();
+            if (target != null)
+            {
+                target.TakeDamage(10);
+                Debug.Log($"Enemy dealt {baseDamageToPlayer} damage to player.");
+            }
+            else
+            {
+                Debug.LogWarning("PlayerScript not found on target.");
+            }
+        }
     }
 
     public void EndAttack()
     {
-        swordCollision?.DisableSwordCollider();
-        Debug.Log("Enemy attack ended — damage disabled.");
+        Debug.Log("Enemy attack ended.");
     }
 
-    public void DisableSwordHitbox() => swordCollision?.DisableSwordCollider();
+    public void DisableSwordHitbox() { }
 
-    public void EnableSwordHitbox() => swordCollision?.EnableSwordCollider();
+    public void EnableSwordHitbox() { }
 
-    public void ResetSwordHit() => swordCollision?.ResetHit();
+    public void ResetSwordHit() { }
 
 #if UNITY_EDITOR
     private void OnDrawGizmos()
