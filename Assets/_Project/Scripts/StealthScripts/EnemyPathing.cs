@@ -54,7 +54,7 @@ public class EnemyPathing : MonoBehaviour
         if (animator)
         {
             float normSpeed = Mathf.InverseLerp(0, agent.speed, agent.velocity.magnitude);
-            animator.SetFloat("Speed", normSpeed);
+            animator.SetFloat("speed", normSpeed);
         }
     }
 }

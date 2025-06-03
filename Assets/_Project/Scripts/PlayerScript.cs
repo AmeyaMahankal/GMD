@@ -10,6 +10,7 @@ public class PlayerScript : MonoBehaviour
     private bool isCrouched = false;
     private bool isStealthed = false;
     private Animator animator;
+    private static readonly int IsCrouchingHash = Animator.StringToHash("IsCrouching");
 
     [SerializeField] private float speed = 5;
     [SerializeField] public TextMeshProUGUI inputIndicator;
@@ -101,6 +102,12 @@ public class PlayerScript : MonoBehaviour
     public void OnA()
     {
         UpdateInputIndicator("A");
+        
+        if (isCrouched)
+        {
+            Debug.Log("Cannot jump while crouched.");
+            return; // Do nothing if crouched
+        }
 
         if (!isJumping)
         {
@@ -117,6 +124,7 @@ public class PlayerScript : MonoBehaviour
         isStealthed = isCrouched;
         UpdateInputIndicator("B");
         UpdateCrouchIndicator();
+        animator.SetBool(IsCrouchingHash, isCrouched);
 
         Debug.Log(isStealthed ? "Player entered STEALTH mode!" : "Player exited STEALTH mode!");
     }
