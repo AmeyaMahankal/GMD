@@ -1,8 +1,8 @@
-using _Project.Scripts.PlayerScript.Interfaces;
 using UnityEngine;
 using UnityEngine.AI;
+using _Project.Scripts.PlayerScript.Interfaces;
 
-[RequireComponent(typeof(NavMeshAgent), typeof(EnemyPathing))]
+[RequireComponent(typeof(NavMeshAgent), typeof(EnemyPathing), typeof(PlayerDetection))]
 public class DummyAI : MonoBehaviour
 {
     [Header("References")]
@@ -15,14 +15,6 @@ public class DummyAI : MonoBehaviour
     [SerializeField] private float attackCooldown = 3f;
     [SerializeField] private AudioClip swordSwingSFX;
 
-    [Header("Detection")]
-    [SerializeField] private float detectionRange = 15f;
-    [SerializeField] private float fovAngle = 45f;
-
-    [Header("Stealth-Kill")]
-    [SerializeField] private float killDistance = 2f;
-    [SerializeField] private float killAngle = 45f;
-
     private enum AIState { Patrol, Chase, Attack }
     private AIState state = AIState.Patrol;
 
@@ -32,6 +24,7 @@ public class DummyAI : MonoBehaviour
     private PlayerStealth stealth;
     private Animator animator;
     private AudioSource audioSource;
+    private PlayerDetection playerDetection;
 
     private float cooldown;
     private float lostTimer;
@@ -43,6 +36,7 @@ public class DummyAI : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         patrol = GetComponent<EnemyPathing>();
         audioSource = GetComponent<AudioSource>();
+        playerDetection = GetComponent<PlayerDetection>();
 
         if (TryGetComponent(out Animator anim))
             animator = anim;
@@ -63,19 +57,7 @@ public class DummyAI : MonoBehaviour
         if (playerScript == null) return;
 
         float distance = Vector3.Distance(transform.position, player.position);
-        bool inSight = false;
-
-        if (distance <= detectionRange)
-        {
-            if (stealth.IsStealthed)
-            {
-                inSight = InFOV(transform, player, fovAngle, detectionRange);
-            }
-            else
-            {
-                inSight = HasLineOfSight(transform.position, player.position);
-            }
-        }
+        bool inSight = playerDetection.CanSeePlayer();
 
         switch (state)
         {
@@ -180,39 +162,11 @@ public class DummyAI : MonoBehaviour
                 stealth = playerScript.GetComponent<PlayerStealth>();
             }
         }
-    }
 
-    public static bool InFOV(Transform origin, Transform target, float maxAngle, float maxRadius)
-    {
-        Collider[] overlaps = new Collider[10];
-        int count = Physics.OverlapSphereNonAlloc(origin.position, maxRadius, overlaps);
-
-        for (int i = 0; i < count; i++)
+        if (playerDetection != null)
         {
-            if (overlaps[i] && overlaps[i].transform == target)
-            {
-                Vector3 dir = (target.position - origin.position).normalized;
-                dir.y = 0;
-
-                if (Vector3.Angle(origin.forward, dir) > maxAngle) continue;
-
-                if (Physics.Raycast(origin.position, target.position - origin.position,
-                                    out RaycastHit hit, maxRadius) &&
-                    hit.transform == target)
-                    return true;
-            }
+            playerDetection.player = player;
         }
-        return false;
-    }
-
-    private bool HasLineOfSight(Vector3 origin, Vector3 targetPos)
-    {
-        Vector3 dir = (targetPos - origin).normalized;
-        if (Physics.Raycast(origin, dir, out RaycastHit hit, detectionRange))
-        {
-            return hit.transform == player;
-        }
-        return false;
     }
 
     public void PlaySwordSwingSound()
@@ -248,42 +202,6 @@ public class DummyAI : MonoBehaviour
     }
 
     public void DisableSwordHitbox() { }
-
     public void EnableSwordHitbox() { }
-
     public void ResetSwordHit() { }
-
-#if UNITY_EDITOR
-    private void OnDrawGizmos()
-    {
-        // 360-degree detection range
-        Gizmos.color = new Color(1f, 1f, 0f, 0.2f);
-        Gizmos.DrawWireSphere(transform.position, detectionRange);
-
-        // 45-degree stealth detection cone
-        Vector3 left = Quaternion.AngleAxis(fovAngle, transform.up) * transform.forward * detectionRange;
-        Vector3 right = Quaternion.AngleAxis(-fovAngle, transform.up) * transform.forward * detectionRange;
-        Gizmos.color = Color.cyan;
-        Gizmos.DrawRay(transform.position, left);
-        Gizmos.DrawRay(transform.position, right);
-
-        if (player != null)
-        {
-            bool inside = InFOV(transform, player, fovAngle, detectionRange);
-            Gizmos.color = inside ? Color.green : Color.red;
-            Gizmos.DrawRay(transform.position,
-                           (player.position - transform.position).normalized * detectionRange);
-        }
-
-        // Stealth kill radius and angle
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, killDistance);
-
-        Vector3 killL = Quaternion.AngleAxis(killAngle, transform.up) * -transform.forward * killDistance;
-        Vector3 killR = Quaternion.AngleAxis(-killAngle, transform.up) * -transform.forward * killDistance;
-        Gizmos.color = new Color(1f, 0f, 1f);
-        Gizmos.DrawRay(transform.position, killL);
-        Gizmos.DrawRay(transform.position, killR);
-    }
-#endif
 }
