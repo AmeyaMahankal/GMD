@@ -50,14 +50,21 @@ public class PlayerScript : MonoBehaviour
     
     private void FixedUpdate()
     {
-        Vector3 movement = new Vector3(movementX, 0.0f, movementY);
+        Vector3 inputVector = new Vector3(movementX, 0.0f, movementY);
+
+        // Real movement vector
+        Vector3 movement = inputVector.normalized * speed;
+
+        // Feed actual speed into animator (you can scale this if needed for your blend tree)
         animator.SetFloat("speed", movement.magnitude);
 
-        if (movement.sqrMagnitude > 0.01f) {
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.15f);
+        // Rotate player to face direction of movement
+        if (inputVector.sqrMagnitude > 0.01f) {
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(inputVector), 0.15f);
         }
 
-        Vector3 newPosition = rb.position + movement.normalized * speed * Time.fixedDeltaTime;
+        // Apply movement via Rigidbody
+        Vector3 newPosition = rb.position + movement * Time.fixedDeltaTime;
         rb.MovePosition(newPosition);
     }
 
@@ -85,8 +92,13 @@ public class PlayerScript : MonoBehaviour
     public void OnMovement(InputValue value)
     {
         Vector2 movementVector = value.Get<Vector2>();
-        movementX = movementVector.x;
-        movementY = movementVector.y;
+
+        float deadZone = 0.2f;
+        movementVector.x = Mathf.Abs(movementVector.x) < deadZone ? 0 : movementVector.x;
+        movementVector.y = Mathf.Abs(movementVector.y) < deadZone ? 0 : movementVector.y;
+
+        movementX = Mathf.Sign(movementVector.x) * movementVector.x * movementVector.x;
+        movementY = Mathf.Sign(movementVector.y) * movementVector.y * movementVector.y;
     }
 
     public void OnA()
