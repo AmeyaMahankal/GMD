@@ -1,9 +1,10 @@
-﻿namespace _Project.Scripts.PlayerScript.Interfaces
+﻿public interface ICombatant
 {
-    public interface ICombatant
-    {
-
-        //void TakeDamage(int amount);
-    }
-
+    void PerformAttack();
+    void StartAttack();
+    void EndAttack();
+    void EnableSwordHitbox();
+    void DisableSwordHitbox();
+    void ResetSwordHit();
+    void PlaySwordSwingSound();
 }

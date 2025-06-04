@@ -11,37 +11,30 @@ public class DummyAI : MonoBehaviour
     [Header("Movement / Combat")]
     [SerializeField] private float speed = 5f;
     [SerializeField] private float stopDistance = 2f;
-    [SerializeField] private int baseDamageToPlayer = 5;
     [SerializeField] private float attackCooldown = 3f;
-    [SerializeField] private AudioClip swordSwingSFX;
 
     private enum AIState { Patrol, Chase, Attack }
     private AIState state = AIState.Patrol;
 
     private NavMeshAgent agent;
     private EnemyPathing patrol;
+    private Animator animator;
     private PlayerScript playerScript;
     private PlayerStealth stealth;
-    private Animator animator;
-    private AudioSource audioSource;
     private PlayerDetection playerDetection;
+    private EnemyCombat enemyCombat;
 
     private float cooldown;
     private float lostTimer;
     private const float LOST_SIGHT_GRACE = 3f;
-    public bool IsAttacking { get; set; }
 
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
         patrol = GetComponent<EnemyPathing>();
-        audioSource = GetComponent<AudioSource>();
         playerDetection = GetComponent<PlayerDetection>();
-
-        if (TryGetComponent(out Animator anim))
-            animator = anim;
-        else
-            Debug.LogWarning("DummyAI: No Animator component found.");
+        enemyCombat = GetComponent<EnemyCombat>();
+        animator = GetComponent<Animator>();
 
         CachePlayerReference();
         agent.speed = speed;
@@ -62,7 +55,7 @@ public class DummyAI : MonoBehaviour
         switch (state)
         {
             case AIState.Patrol:
-                if (animator != null) animator.SetFloat("speed", 0f);
+                SetAnimSpeed(0f);
 
                 if (inSight)
                 {
@@ -80,16 +73,14 @@ public class DummyAI : MonoBehaviour
                     Vector3 dir = (player.position - transform.position).normalized;
                     Vector3 targetPos = player.position - dir * stopDistance;
 
-                    if (NavMesh.SamplePosition(targetPos, out NavMeshHit hit, 1.0f, NavMesh.AllAreas))
+                    if (NavMesh.SamplePosition(targetPos, out NavMeshHit hit, 1f, NavMesh.AllAreas))
                     {
                         agent.SetDestination(hit.position);
                     }
 
                     lostTimer = LOST_SIGHT_GRACE;
                     RotateTowardPlayer();
-
-                    if (animator != null)
-                        animator.SetFloat("speed", agent.velocity.magnitude);
+                    SetAnimSpeed(agent.velocity.magnitude);
 
                     if (distance <= stopDistance)
                     {
@@ -101,9 +92,7 @@ public class DummyAI : MonoBehaviour
                 else
                 {
                     lostTimer -= Time.deltaTime;
-
-                    if (animator != null)
-                        animator.SetFloat("speed", agent.velocity.magnitude);
+                    SetAnimSpeed(agent.velocity.magnitude);
 
                     if (lostTimer <= 0f)
                     {
@@ -115,7 +104,7 @@ public class DummyAI : MonoBehaviour
 
             case AIState.Attack:
                 RotateTowardPlayer();
-                if (animator != null) animator.SetFloat("speed", 0f);
+                SetAnimSpeed(0f);
 
                 cooldown -= Time.deltaTime;
 
@@ -130,15 +119,21 @@ public class DummyAI : MonoBehaviour
                     agent.isStopped = false;
                     state = AIState.Chase;
                 }
-
                 break;
         }
+    }
+
+    private void SetAnimSpeed(float speed)
+    {
+        if (animator != null)
+            animator.SetFloat("speed", speed);
     }
 
     private void RotateTowardPlayer()
     {
         Vector3 direction = (player.position - transform.position).normalized;
         direction.y = 0f;
+
         if (direction != Vector3.zero)
         {
             Quaternion lookRotation = Quaternion.LookRotation(direction);
@@ -164,44 +159,9 @@ public class DummyAI : MonoBehaviour
         }
 
         if (playerDetection != null)
-        {
             playerDetection.player = player;
-        }
+
+        if (enemyCombat != null)
+            enemyCombat.SetPlayer(player);
     }
-
-    public void PlaySwordSwingSound()
-    {
-        if (swordSwingSFX != null && audioSource != null)
-        {
-            audioSource.PlayOneShot(swordSwingSFX);
-        }
-    }
-
-    public void StartAttack()
-    {
-        Debug.Log("Enemy attack started — attempting to deal damage.");
-
-        if (player != null && Vector3.Distance(transform.position, player.position) <= stopDistance + 0.25f)
-        {
-            PlayerScript target = player.GetComponent<PlayerScript>();
-            if (target != null)
-            {
-                target.TakeDamage(baseDamageToPlayer);
-                Debug.Log($"Enemy dealt {baseDamageToPlayer} damage to player.");
-            }
-            else
-            {
-                Debug.LogWarning("PlayerScript not found on target.");
-            }
-        }
-    }
-
-    public void EndAttack()
-    {
-        Debug.Log("Enemy attack ended.");
-    }
-
-    public void DisableSwordHitbox() { }
-    public void EnableSwordHitbox() { }
-    public void ResetSwordHit() { }
 }

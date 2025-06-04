@@ -1,7 +1,7 @@
 using _Project.Scripts.PlayerScript.Interfaces;
 using UnityEngine;
 
-public class DummyHealth : MonoBehaviour, ICombatant
+public class DummyHealth : MonoBehaviour
 {
     [SerializeField] private int health = 100;
 
