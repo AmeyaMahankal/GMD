@@ -40,7 +40,8 @@ public class PlayerStealth : MonoBehaviour, IStealth
         float dotProduct = Vector3.Dot(closestEnemy.transform.forward, toPlayer);
         float requiredDot = Mathf.Cos(killAngle * Mathf.Deg2Rad);
 
-        if (dotProduct > requiredDot)
+        // Check if player is BEHIND the enemy within killAngle
+        if (dotProduct < -requiredDot)
         {
             Debug.Log("STEALTH KILL TRIGGERED");
 
@@ -63,4 +64,5 @@ public class PlayerStealth : MonoBehaviour, IStealth
             Debug.Log("Stealth kill failed — player not behind the enemy.");
         }
     }
+
 }

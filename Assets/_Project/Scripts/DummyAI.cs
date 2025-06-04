@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent), typeof(EnemyPathing))]
-public class DummyAI : MonoBehaviour 
+public class DummyAI : MonoBehaviour
 {
     [Header("References")]
     public Transform player;
@@ -14,7 +14,6 @@ public class DummyAI : MonoBehaviour
     [SerializeField] private int baseDamageToPlayer = 5;
     [SerializeField] private float attackCooldown = 3f;
     [SerializeField] private AudioClip swordSwingSFX;
-    // Removed: [SerializeField] private SwordCollision swordCollision;
 
     [Header("Detection")]
     [SerializeField] private float detectionRange = 15f;
@@ -50,15 +49,13 @@ public class DummyAI : MonoBehaviour
         else
             Debug.LogWarning("DummyAI: No Animator component found.");
 
-        // Removed swordCollision initialization
-
         CachePlayerReference();
         agent.speed = speed;
     }
 
     private void Start()
     {
-        cooldown = 0f; // Start attack immediately if close enough
+        cooldown = 0f;
     }
 
     private void Update()
@@ -66,9 +63,19 @@ public class DummyAI : MonoBehaviour
         if (playerScript == null) return;
 
         float distance = Vector3.Distance(transform.position, player.position);
-        bool inSight = stealth.IsStealthed
-            ? distance <= detectionRange && InFOV(transform, player, fovAngle, detectionRange)
-            : distance <= detectionRange;
+        bool inSight = false;
+
+        if (distance <= detectionRange)
+        {
+            if (stealth.IsStealthed)
+            {
+                inSight = InFOV(transform, player, fovAngle, detectionRange);
+            }
+            else
+            {
+                inSight = HasLineOfSight(transform.position, player.position);
+            }
+        }
 
         switch (state)
         {
@@ -106,7 +113,7 @@ public class DummyAI : MonoBehaviour
                     {
                         agent.isStopped = true;
                         state = AIState.Attack;
-                        cooldown = 0f; // Allow immediate first attack
+                        cooldown = 0f;
                     }
                 }
                 else
@@ -198,6 +205,16 @@ public class DummyAI : MonoBehaviour
         return false;
     }
 
+    private bool HasLineOfSight(Vector3 origin, Vector3 targetPos)
+    {
+        Vector3 dir = (targetPos - origin).normalized;
+        if (Physics.Raycast(origin, dir, out RaycastHit hit, detectionRange))
+        {
+            return hit.transform == player;
+        }
+        return false;
+    }
+
     public void PlaySwordSwingSound()
     {
         if (swordSwingSFX != null && audioSource != null)
@@ -215,7 +232,7 @@ public class DummyAI : MonoBehaviour
             PlayerScript target = player.GetComponent<PlayerScript>();
             if (target != null)
             {
-                target.TakeDamage(10);
+                target.TakeDamage(baseDamageToPlayer);
                 Debug.Log($"Enemy dealt {baseDamageToPlayer} damage to player.");
             }
             else
@@ -239,9 +256,11 @@ public class DummyAI : MonoBehaviour
 #if UNITY_EDITOR
     private void OnDrawGizmos()
     {
-        Gizmos.color = Color.yellow;
+        // 360-degree detection range
+        Gizmos.color = new Color(1f, 1f, 0f, 0.2f);
         Gizmos.DrawWireSphere(transform.position, detectionRange);
 
+        // 45-degree stealth detection cone
         Vector3 left = Quaternion.AngleAxis(fovAngle, transform.up) * transform.forward * detectionRange;
         Vector3 right = Quaternion.AngleAxis(-fovAngle, transform.up) * transform.forward * detectionRange;
         Gizmos.color = Color.cyan;
@@ -256,6 +275,7 @@ public class DummyAI : MonoBehaviour
                            (player.position - transform.position).normalized * detectionRange);
         }
 
+        // Stealth kill radius and angle
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, killDistance);
 
