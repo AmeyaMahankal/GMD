@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7046184204121623969}
   - component: {fileID: 6840288656834625734}
-  - component: {fileID: 1637846290415113653}
   m_Layer: 0
   m_Name: SwordCollider
   m_TagString: Untagged
@@ -54,20 +53,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.66, y: 0.1, z: 0.1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &1637846290415113653
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2227485942545603219}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6b41ecaabcc0f164d9d0ba270775704d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  swordDamage: 30
-  swordCollider: {fileID: 0}
 --- !u!1001 &5578274043996458592
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -949,16 +934,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 5
-  inputIndicator: {fileID: 0}
-  crouchedIndicator: {fileID: 0}
   jumpHeight: 5
   gravity: 9.81
-  isAttacking: 0
-  swordCollision: {fileID: 1637846290415113653}
-  isBlocking: 0
-  playerHealth: 100
-  killDistance: 2
-  killAngle: 45
+  inputIndicator: {fileID: 0}
+  pickUpIndicator: {fileID: 0}
+  crouchedIndicator: {fileID: 0}
+  standingIndicator: {fileID: 0}
 --- !u!4 &6115798659836359080 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1852576806548013000, guid: 6aa6efc94becff14883739bb794c1e32, type: 3}
