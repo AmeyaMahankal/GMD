@@ -11,12 +11,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Project/Scenes/MainMenu.unity
     guid: f00ad61827539ad4f9a6fad7a9db95a6
-  - enabled: 1
+  - enabled: 0
     path: Assets/_Project/Scenes/Master.unity
     guid: 408f10ca77632834386f942fd76b3f25
   - enabled: 0
     path: Assets/_Project/Scenes/Master 3.unity
     guid: 83ac0247d6adb4d4e96680dcbbe55f38
+  - enabled: 1
+    path: Assets/Gridness Studios/Elementary Dungeon Pack Lite/Scenes/DungeonPackLiteCollection.unity
+    guid: 088ccecd675515f47941d674e7f0177f
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

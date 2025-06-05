@@ -12,8 +12,8 @@ public class StealthKillGizmos : MonoBehaviour
 
          Vector3 backward = transform.position - transform.forward * killDistance;
 
-        Quaternion leftRotation = Quaternion.Euler(0, killAngle+90, 0);   
-        Quaternion rightRotation = Quaternion.Euler(0, -killAngle-90, 0); 
+        Quaternion leftRotation = Quaternion.Euler(0, killAngle, 0);   
+        Quaternion rightRotation = Quaternion.Euler(0, -killAngle, 0); 
 
         Vector3 leftDirection = leftRotation * -transform.forward * killDistance;
         Vector3 rightDirection = rightRotation * -transform.forward * killDistance;

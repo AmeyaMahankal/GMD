@@ -1,3 +1,4 @@
+using _Project.Scripts.PlayerScript.Interfaces;
 using UnityEngine;
 
 public class DummyHealth : MonoBehaviour

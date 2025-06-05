@@ -36,7 +36,8 @@ public class MenuActions : MonoBehaviour
         }
     }
     public void StartGame() {
-        SceneManager.LoadScene("Master");
+        int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
+        SceneManager.LoadScene(nextSceneIndex);
         Debug.Log("Start");
     }
     

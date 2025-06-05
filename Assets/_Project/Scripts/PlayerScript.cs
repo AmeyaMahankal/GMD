@@ -2,67 +2,74 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using TMPro;
+using _Project.Scripts.PlayerScript.Interfaces;
 
 public class PlayerScript : MonoBehaviour
 {
     private float movementX;
     private float movementY;
-    private bool isCrouched = false;
-    private bool isStealthed = false;
+    private bool isJumping = false;
+    private float verticalVelocity = 0f;
+    private Rigidbody rb;
     private Animator animator;
+    private PlayerCombat playerCombat;
 
-    [SerializeField] private float speed = 5;
-    [SerializeField] public TextMeshProUGUI inputIndicator;
-    [SerializeField] public TextMeshProUGUI crouchedIndicator;
+    private IStealth playerStealth;
 
-    [Header("Jump Settings")]
+
+    [SerializeField] private float speed = 5f;
     [SerializeField] private float jumpHeight = 5f;
     [SerializeField] private float gravity = 9.81f;
-    private float verticalVelocity = 0f;
-    private bool isJumping = false;
 
-    [Header("Attack Settings")]
-    public bool isAttacking = false;
+    private bool isCrouched = false;
+    private static readonly int IsCrouchedHash = Animator.StringToHash("IsCrouching");
 
-    [Header("Block Settings")]
-    public bool isBlocking = false;
+    [SerializeField] public TextMeshProUGUI inputIndicator;
+    [SerializeField] public TextMeshProUGUI  pickUpIndicator;
 
-    [Header("Player Health")]
-    [SerializeField] private int playerHealth = 100;
 
-    [Header("Stealth Kill Settings")]
-    [SerializeField] private float killDistance = 2f;
-    [SerializeField] private float killAngle = 45f;
-
-    public bool IsStealthed => isStealthed;
+    [SerializeField] public GameObject  crouchedIndicator;
+    [SerializeField] public GameObject  standingIndicator;
+    private DroppedItem nearbyItem;
 
     private void Awake()
     {
         animator = GetComponent<Animator>();
+        playerCombat = GetComponent<PlayerCombat>();
+        playerStealth = GetComponent<IStealth>();
+        rb = GetComponent<Rigidbody>();
+
     }
 
     private void Start()
     {
         animator.SetBool("isGrounded", true);
         animator.SetBool("isJumping", false);
+        UpdateCrouchIndicator();
+    }
+    
+    private void FixedUpdate()
+    {
+        Vector3 inputVector = new Vector3(movementX, 0.0f, movementY);
+
+        // Real movement vector
+        Vector3 movement = inputVector.normalized * speed;
+
+        // Feed actual speed into animator (you can scale this if needed for your blend tree)
+        animator.SetFloat("speed", movement.magnitude);
+
+        // Rotate player to face direction of movement
+        if (inputVector.sqrMagnitude > 0.01f) {
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(inputVector), 0.15f);
+        }
+
+        // Apply movement via Rigidbody
+        Vector3 newPosition = rb.position + movement * Time.fixedDeltaTime;
+        rb.MovePosition(newPosition);
     }
 
     private void Update()
     {
-        Vector3 movement = new Vector3(movementX, 0f, movementY);
-        animator.SetFloat("speed", movement.magnitude);
-
-        if (movement.sqrMagnitude > 0.01f)
-        {
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation,
-                Quaternion.LookRotation(movement),
-                0.15f
-            );
-        }
-
-        transform.Translate(movement * Time.deltaTime * speed, Space.World);
-
         if (isJumping)
         {
             verticalVelocity -= gravity * Time.deltaTime;
@@ -85,13 +92,24 @@ public class PlayerScript : MonoBehaviour
     public void OnMovement(InputValue value)
     {
         Vector2 movementVector = value.Get<Vector2>();
-        movementX = movementVector.x;
-        movementY = movementVector.y;
+
+        float deadZone = 0.2f;
+        movementVector.x = Mathf.Abs(movementVector.x) < deadZone ? 0 : movementVector.x;
+        movementVector.y = Mathf.Abs(movementVector.y) < deadZone ? 0 : movementVector.y;
+
+        movementX = Mathf.Sign(movementVector.x) * movementVector.x * movementVector.x;
+        movementY = Mathf.Sign(movementVector.y) * movementVector.y * movementVector.y;
     }
 
     public void OnA()
     {
         UpdateInputIndicator("A");
+
+        if (playerStealth?.IsStealthed == true)
+        {
+            Debug.Log("Cannot jump while crouched.");
+            return;
+        }
 
         if (!isJumping)
         {
@@ -102,122 +120,83 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
-    public void OnB() => UpdateInputIndicator("B");
+    public void OnB()
+    {
+        isCrouched = !isCrouched;
+
+        UpdateInputIndicator("B");
+        animator.SetBool(IsCrouchedHash, isCrouched);
+        playerStealth?.ToggleStealth();
+        UpdateCrouchIndicator();
+    }
 
     public void OnX()
     {
-        isCrouched = !isCrouched;
-        isStealthed = isCrouched;
         UpdateInputIndicator("X");
-        UpdateCrouchIndicator();
-
-        Debug.Log(isStealthed ? "Player entered STEALTH mode!" : "Player exited STEALTH mode!");
+        if (nearbyItem != null && !nearbyItem.pickedUp) {
+            PickupItem(nearbyItem);
+            pickUpIndicator.text = "";
+            nearbyItem = null;
+        }
+        
+        //opening a chest or a continous interctable. 
+        //IsInteractingWithContinuousCollectible = !IsInteractingWithContinuousCollectible;
+        //animator.SetBool(IsInteractingWithContinuousCollectibleHash, IsInteractingWithContinuousCollectible);
+        Debug.Log("X");
     }
 
-    public void OnY() => UpdateInputIndicator("Y");
+    public void OnY()
+    {
+        UpdateInputIndicator("Y");
+    }
 
     public void OnLeftTrigger()
     {
         UpdateInputIndicator("L Trigger");
-        isBlocking = !isBlocking;
-
-        Debug.Log(isBlocking ? "Player started blocking!" : "Player stopped blocking!");
+        playerCombat?.ToggleBlock();
     }
 
     public void OnRightTrigger()
     {
         UpdateInputIndicator("R Trigger");
 
-        if (isStealthed)
+        if (playerStealth?.IsStealthed == true)
         {
-            TryStealthKill();
+            playerStealth.TryStealthKill();
         }
         else
         {
-            PerformAttack();
+            playerCombat?.PerformAttack();
         }
     }
 
-    public void OnStart() => UpdateInputIndicator("Start");
-
-    private void UpdateCrouchIndicator()
+    public void OnStart()
     {
-        crouchedIndicator.text = isCrouched ? "Crouched" : "Not Crouched.";
-        crouchedIndicator.color = isCrouched ? Color.red : Color.green;
+        UpdateInputIndicator("Start");
     }
+
+    private void UpdateCrouchIndicator() {
+        if(isCrouched) {
+            crouchedIndicator.SetActive(true);
+            standingIndicator.SetActive(false);
+        } else {
+            standingIndicator.SetActive(true);
+            crouchedIndicator.SetActive(false);
+        }
+    }
+
 
     private void UpdateInputIndicator(string input) => inputIndicator.text = input;
+    
+    public void TakeDamage(int amount)
 
-    private void PerformAttack()
     {
-        animator.SetTrigger("attack");
-        isAttacking = true;
+        GetComponent<PlayerHealth>().TakeDamage(amount);
+    }
+    private void PickupItem(DroppedItem item)
+    {
+        var inventoryManager = GetComponent<InventoryManager>();
+        inventoryManager.AddItem(item.item);
     }
 
-    public void EndAttack()
-    {
-        isAttacking = false;
-        Debug.Log("Attack ended.");
-    }
-
-    public void TakeDamage(int damage)
-    {
-        playerHealth -= damage;
-        Debug.Log($"Player took {damage} damage. Remaining Health = {playerHealth}");
-
-        if (playerHealth <= 0)
-            Debug.Log("Player is dead!");
-    }
-
-    private void TryStealthKill()
-    {
-        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
-        GameObject closestEnemy = null;
-        float closestDistance = Mathf.Infinity;
-
-        foreach (GameObject enemy in enemies)
-        {
-            float distance = Vector3.Distance(transform.position, enemy.transform.position);
-            if (distance < closestDistance && distance <= killDistance)
-            {
-                closestEnemy = enemy;
-                closestDistance = distance;
-            }
-        }
-
-        if (closestEnemy == null) return;
-
-        Vector3 toPlayer = (transform.position - closestEnemy.transform.position).normalized;
-        float dotProduct = Vector3.Dot(closestEnemy.transform.forward, toPlayer);
-        float requiredDot = Mathf.Cos(killAngle * Mathf.Deg2Rad);
-
-        Debug.Log($"dotProduct: {dotProduct}, requiredDot: {requiredDot}");
-
-        if (dotProduct > requiredDot)
-        {
-            Debug.Log("STEALTH KILL TRIGGERED");
-
-            Animator enemyAnimator = closestEnemy.GetComponentInChildren<Animator>();
-            if (enemyAnimator)
-            {
-                enemyAnimator.SetTrigger("Die");
-            }
-
-            DummyHealth health = closestEnemy.GetComponent<DummyHealth>();
-            if (health != null)
-            {
-                Debug.Log("Applying 999 damage to enemy...");
-                health.TakeDamage(999);
-            }
-            else
-            {
-                Debug.Log("DummyHealth not found, destroying object directly.");
-                Destroy(closestEnemy);
-            }
-        }
-        else
-        {
-            Debug.Log("Stealth kill failed — player not behind the enemy.");
-        }
-    }
 }
