@@ -1,7 +1,7 @@
 # GMD Project: Dungeon Rush
 
 ## 🎮 YouTube Video Demonstration
-[Watch the gameplay demo (5 minutes)](https://youtube.com/your-demo-link)
+[Watch the gameplay demo (5 minutes)]([https://youtube.com/your-demo-link](https://youtu.be/XVfCWV2Kz0U))
 
 ## 📝 Blog Posts
 - [Link to Blog Posts](blogposts)
